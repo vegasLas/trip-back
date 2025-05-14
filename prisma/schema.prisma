@@ -1,0 +1,315 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Base user information shared between tourists and guides
+model BaseUser {
+  id            Int       @id @default(autoincrement())
+  telegramId    String    @unique
+  firstName     String
+  lastName      String?
+  username      String?
+  languageCode  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // One-to-one relations with specific roles
+  tourist       Tourist?
+  guide         Guide?
+}
+
+// Tourist-specific model
+model Tourist {
+  id            Int       @id @default(autoincrement())
+  baseUser      BaseUser  @relation(fields: [baseUserId], references: [id])
+  baseUserId    Int       @unique
+  bookings      Booking[]
+  reviews       Review[]
+  auctions      Auction[]
+  directRequests DirectRequest[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Guide-specific model with profile information
+model Guide {
+  id            Int       @id @default(autoincrement())
+  baseUser      BaseUser  @relation(fields: [baseUserId], references: [id])
+  baseUserId    Int       @unique
+  bio           String?
+  languages     String[]  // Languages spoken
+  specialties   String[]  // Guide specialties
+  phoneNumber   String?
+  email         String?
+  avatarUrl     String?
+  rating        Float?    // Average rating
+  isActive      Boolean   @default(true)  // Guide's availability status
+  selectedPrograms Program[] @relation("GuideSelectedPrograms") // Programs the guide has selected to work on
+  programs      Program[] // Programs created by guide
+  receivedReviews Review[] @relation("GuideReviews")
+  bids          Bid[]
+  recommendations ProgramRecommendation[] // Program recommendations made by the guide
+  payments      Payment[] // Payments associated with this guide
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Program model (replacing Tour)
+model Program {
+  id            Int            @id @default(autoincrement())
+  title         String
+  description   String
+  guideId       Int
+  guide         Guide          @relation(fields: [guideId], references: [id])
+  selectedGuides Guide[]       @relation("GuideSelectedPrograms") // Guides who have selected this program
+  basePrice     Float          // Base price per person
+  durationDays  Int            // Duration in days
+  maxGroupSize  Int
+  startLocation String
+  regions       String[]       // Regions covered in the program
+  tags          String[]       // Categories/tags for the program
+  imageUrls     String[]       // Program images
+  isActive      Boolean        @default(true)
+  isApproved    Boolean        @default(false)  // Admin approval status
+  bookingType   BookingType    @default(BOTH)  // Type of booking allowed
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  days          ProgramDay[]   // Days of the program
+  bookings      Booking[]      // Direct bookings
+  reviews       Review[]       
+  pricingTiers  PricingTier[]  // Different pricing tiers based on group size
+  directRequests DirectRequest[] // Requests for direct booking
+  recommendations ProgramRecommendation[] // Guide recommendations
+}
+
+// ProgramRecommendation model for guide program recommendations
+model ProgramRecommendation {
+  id            Int            @id @default(autoincrement())
+  programId     Int
+  program       Program        @relation(fields: [programId], references: [id])
+  guideId       Int
+  guide         Guide          @relation(fields: [guideId], references: [id])
+  status        ApprovalStatus @default(PENDING)
+  comment       String?        // Guide's recommendation comment
+  adminComment  String?        // Admin's response comment
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// DirectRequest model for requesting guide availability
+model DirectRequest {
+  id            Int            @id @default(autoincrement())
+  programId     Int
+  program       Program        @relation(fields: [programId], references: [id])
+  touristId     Int
+  tourist       Tourist        @relation(fields: [touristId], references: [id])
+  startDate     DateTime
+  numberOfPeople Int
+  status        RequestStatus  @default(PENDING)
+  guideResponse String?        // Guide's response message
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// PricingTier model for group-based pricing
+model PricingTier {
+  id              Int      @id @default(autoincrement())
+  programId       Int
+  program         Program  @relation(fields: [programId], references: [id])
+  minPeople       Int      // Minimum number of people for this tier
+  maxPeople       Int      // Maximum number of people for this tier
+  pricePerPerson  Float    // Price per person for this group size
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  bookings        Booking[] // Bookings that used this pricing tier
+}
+
+// ProgramDay model
+model ProgramDay {
+  id            Int            @id @default(autoincrement())
+  programId     Int
+  program       Program        @relation(fields: [programId], references: [id])
+  dayNumber     Int            // Day 1, Day 2, etc.
+  title         String?
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  points        ProgramPoint[] // Points/activities in this day
+}
+
+// ProgramPoint model
+model ProgramPoint {
+  id            Int            @id @default(autoincrement())
+  programDayId  Int
+  programDay    ProgramDay     @relation(fields: [programDayId], references: [id])
+  title         String
+  description   String?
+  pointType     PointType      @default(ACTIVITY) // Type of point (meal, activity, etc.)
+  order         Int            // Order in the day
+  duration      Int?           // Duration in minutes (optional)
+  location      String?
+  imageUrl      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// Booking model
+model Booking {
+  id             Int            @id @default(autoincrement())
+  programId      Int
+  program        Program        @relation(fields: [programId], references: [id])
+  touristId      Int
+  tourist        Tourist        @relation(fields: [touristId], references: [id])
+  startDate      DateTime
+  status         BookingStatus  @default(PENDING)
+  numberOfPeople Int            @default(1)
+  pricingTierId  Int?
+  pricingTier    PricingTier?  @relation(fields: [pricingTierId], references: [id])
+  pricePerPerson Float          // Price per person that was applied
+  totalPrice     Float          // Total price for all people
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+// Review model
+model Review {
+  id            Int            @id @default(autoincrement())
+  programId     Int
+  program       Program        @relation(fields: [programId], references: [id])
+  touristId     Int
+  tourist       Tourist        @relation(fields: [touristId], references: [id])
+  guideId       Int
+  guide         Guide          @relation(name: "GuideReviews", fields: [guideId], references: [id])
+  rating        Int            // 1-5 stars
+  comment       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// Auction model for tourists to request custom tours
+model Auction {
+  id            Int            @id @default(autoincrement())
+  touristId     Int            // Tourist who created the auction
+  tourist       Tourist        @relation(fields: [touristId], references: [id])
+  title         String
+  description   String
+  location      String
+  startDate     String         // Desired date range
+  numberOfPeople Int
+  budget        Float?
+  status        AuctionStatus  @default(OPEN)
+  expiresAt     DateTime
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  bids          Bid[]
+}
+
+// Bid model for guides to bid on auctions
+model Bid {
+  id            Int            @id @default(autoincrement())
+  auctionId     Int
+  auction       Auction        @relation(fields: [auctionId], references: [id])
+  guideId       Int
+  guide         Guide          @relation(fields: [guideId], references: [id])
+  price         Float
+  description   String
+  isAccepted    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// Enums
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum AuctionStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum PointType {
+  ACTIVITY
+  MEAL
+  TRANSPORT
+  ACCOMMODATION
+  SIGHTSEEING
+  OTHER
+}
+
+enum BookingType {
+  DIRECT_ONLY    // Only direct booking allowed
+  AUCTION_ONLY   // Only auction booking allowed
+  BOTH           // Both booking types allowed
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+// Payment model for transaction tracking
+model Payment {
+  id             Int            @id @default(autoincrement())
+  guideId        Int
+  guide          Guide          @relation(fields: [guideId], references: [id])
+  currency       String         @default("RUB")
+  status         PaymentStatus  @default(PENDING)
+  paymentType    PaymentType
+  idempotencyKey    Int?           // ID of related Auction or DirectRequest
+  tariff         Tariff? @relation(fields: [tariffId], references: [id])
+  tariffId        Int?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Tariff {
+  id             Int      @id @default(autoincrement())
+  amount         Int      // Number of tariff units
+  pricePerUnit   Float    // Price per unit in RUB
+  totalPrice     Float    // amount * pricePerUnit
+  isActive       Boolean  @default(true) // Permanent active status
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  payments       Payment[]
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  AUCTION_BID
+  DIRECT_BOOKING
+  TARIFF
+}

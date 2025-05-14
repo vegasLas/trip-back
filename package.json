@@ -1,0 +1,54 @@
+{
+  "name": "back",
+  "version": "1.0.0",
+  "description": "Backend for Telegram Mini App Tourist Guide Service",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "test": "jest",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write 'src/**/*.ts'"
+  },
+  "keywords": [
+    "telegram",
+    "mini-app",
+    "tourist",
+    "guide",
+    "booking"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "@telegram-apps/init-data-node": "^2.0.7",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.15.17",
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "prisma": "^6.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node-telegram-bot-api": "^0.64.8",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-node-dev": "^2.0.0"
+  }
+}
