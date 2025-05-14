@@ -2,10 +2,21 @@ import { Request, Response } from 'express';
 import * as reviewService from '../services/reviewService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
+import {
+  GetProgramReviewsController,
+  GetGuideReviewsController,
+  GetReviewByIdController,
+  CreateReviewController,
+  UpdateReviewController,
+  DeleteReviewController,
+  IdParams,
+  CreateReviewRequest,
+  UpdateReviewRequest
+} from '../types';
 
 // Get reviews for a program
-export const getProgramReviews = catchAsync(async (req: Request, res: Response) => {
-  const programId = parseInt(req.params.programId);
+export const getProgramReviews: GetProgramReviewsController = catchAsync(async (req: IdParams, res: Response) => {
+  const programId = parseInt(req.params.id);
   
   if (isNaN(programId)) {
     throw new BadRequestError('Invalid program ID');
@@ -21,7 +32,7 @@ export const getProgramReviews = catchAsync(async (req: Request, res: Response) 
 });
 
 // Get reviews for a guide
-export const getGuideReviews = catchAsync(async (req: Request, res: Response) => {
+export const getGuideReviews: GetGuideReviewsController = catchAsync(async (req: Request, res: Response) => {
   const guideId = parseInt(req.params.guideId);
   
   if (isNaN(guideId)) {
@@ -38,7 +49,7 @@ export const getGuideReviews = catchAsync(async (req: Request, res: Response) =>
 });
 
 // Get review by ID
-export const getReviewById = catchAsync(async (req: Request, res: Response) => {
+export const getReviewById: GetReviewByIdController = catchAsync(async (req: IdParams, res: Response) => {
   const reviewId = parseInt(req.params.id);
   
   if (isNaN(reviewId)) {
@@ -54,7 +65,7 @@ export const getReviewById = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Create new review
-export const createReview = catchAsync(async (req: Request, res: Response) => {
+export const createReview: CreateReviewController = catchAsync(async (req: CreateReviewRequest, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Only tourists can create reviews');
   }
@@ -71,7 +82,7 @@ export const createReview = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Update review
-export const updateReview = catchAsync(async (req: Request, res: Response) => {
+export const updateReview: UpdateReviewController = catchAsync(async (req: UpdateReviewRequest, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Only tourists can update reviews');
   }
@@ -94,7 +105,7 @@ export const updateReview = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Delete review
-export const deleteReview = catchAsync(async (req: Request, res: Response) => {
+export const deleteReview: DeleteReviewController = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Only tourists can delete reviews');
   }

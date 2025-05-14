@@ -2,9 +2,19 @@ import { Request, Response } from 'express';
 import * as bookingService from '../services/bookingService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
+import {
+  GetTouristBookingsController,
+  GetBookingByIdController,
+  CreateBookingController,
+  UpdateBookingController,
+  CancelBookingController,
+  IdParams,
+  CreateBookingRequest,
+  UpdateBookingRequest
+} from '../types';
 
 // List user bookings
-export const getUserBookings = catchAsync(async (req: Request, res: Response) => {
+export const getUserBookings: GetTouristBookingsController = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
     throw new BadRequestError('User not authenticated');
   }
@@ -22,7 +32,7 @@ export const getUserBookings = catchAsync(async (req: Request, res: Response) =>
 });
 
 // Get booking details
-export const getBookingById = catchAsync(async (req: Request, res: Response) => {
+export const getBookingById: GetBookingByIdController = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user) {
     throw new BadRequestError('User not authenticated');
   }
@@ -47,7 +57,7 @@ export const getBookingById = catchAsync(async (req: Request, res: Response) => 
 });
 
 // Create new booking
-export const createBooking = catchAsync(async (req: Request, res: Response) => {
+export const createBooking: CreateBookingController = catchAsync(async (req: CreateBookingRequest, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Only tourists can create bookings');
   }
@@ -64,7 +74,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Update booking status
-export const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
+export const updateBookingStatus: UpdateBookingController = catchAsync(async (req: UpdateBookingRequest, res: Response) => {
   if (!req.user) {
     throw new BadRequestError('User not authenticated');
   }
@@ -90,7 +100,7 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
 });
 
 // Cancel booking
-export const cancelBooking = catchAsync(async (req: Request, res: Response) => {
+export const cancelBooking: CancelBookingController = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Only tourists can cancel bookings');
   }

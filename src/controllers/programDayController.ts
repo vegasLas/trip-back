@@ -2,9 +2,27 @@ import { Request, Response } from 'express';
 import * as programDayService from '../services/programDayService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
+import {
+  GetProgramDaysController,
+  GetProgramDayByIdController,
+  CreateProgramDayController,
+  UpdateProgramDayController,
+  DeleteProgramDayController,
+  CreateProgramDayRequest,
+  UpdateProgramDayRequest,
+} from '../types';
+
+// Custom interface for program and day ID parameters
+interface ProgramDayParams extends Request {
+  params: {
+    programId: string;
+    id: string;
+  };
+  user?: any;
+}
 
 // Get all days for a program
-export const getProgramDays = catchAsync(async (req: Request, res: Response) => {
+export const getProgramDays: GetProgramDaysController = catchAsync(async (req: Request, res: Response) => {
   const programId = parseInt(req.params.programId);
   
   if (isNaN(programId)) {
@@ -21,9 +39,9 @@ export const getProgramDays = catchAsync(async (req: Request, res: Response) => 
 });
 
 // Get day details with points
-export const getProgramDayById = catchAsync(async (req: Request, res: Response) => {
+export const getProgramDayById: GetProgramDayByIdController = catchAsync(async (req: ProgramDayParams, res: Response) => {
   const programId = parseInt(req.params.programId);
-  const dayId = parseInt(req.params.dayId);
+  const dayId = parseInt(req.params.id);
   
   if (isNaN(programId) || isNaN(dayId)) {
     throw new BadRequestError('Invalid program ID or day ID');
@@ -38,7 +56,7 @@ export const getProgramDayById = catchAsync(async (req: Request, res: Response) 
 });
 
 // Add new day to program
-export const createProgramDay = catchAsync(async (req: Request, res: Response) => {
+export const createProgramDay: CreateProgramDayController = catchAsync(async (req: CreateProgramDayRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can add days to programs');
   }
@@ -61,13 +79,13 @@ export const createProgramDay = catchAsync(async (req: Request, res: Response) =
 });
 
 // Update day
-export const updateProgramDay = catchAsync(async (req: Request, res: Response) => {
+export const updateProgramDay: UpdateProgramDayController = catchAsync(async (req: UpdateProgramDayRequest & ProgramDayParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update program days');
   }
   
   const programId = parseInt(req.params.programId);
-  const dayId = parseInt(req.params.dayId);
+  const dayId = parseInt(req.params.id);
   
   if (isNaN(programId) || isNaN(dayId)) {
     throw new BadRequestError('Invalid program ID or day ID');
@@ -85,13 +103,13 @@ export const updateProgramDay = catchAsync(async (req: Request, res: Response) =
 });
 
 // Delete day
-export const deleteProgramDay = catchAsync(async (req: Request, res: Response) => {
+export const deleteProgramDay: DeleteProgramDayController = catchAsync(async (req: ProgramDayParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can delete program days');
   }
   
   const programId = parseInt(req.params.programId);
-  const dayId = parseInt(req.params.dayId);
+  const dayId = parseInt(req.params.id);
   
   if (isNaN(programId) || isNaN(dayId)) {
     throw new BadRequestError('Invalid program ID or day ID');

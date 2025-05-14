@@ -55,6 +55,7 @@ model Guide {
   programs      Program[] // Programs created by guide
   receivedReviews Review[] @relation("GuideReviews")
   bids          Bid[]
+  bookings      Booking[] // Bookings where this guide is selected
   recommendations ProgramRecommendation[] // Program recommendations made by the guide
   payments      Payment[] // Payments associated with this guide
   tokenTransactions TokenTransaction[] // Token transactions for this guide
@@ -181,6 +182,8 @@ model Booking {
   program        Program        @relation(fields: [programId], references: [id])
   touristId      Int
   tourist        Tourist        @relation(fields: [touristId], references: [id])
+  guideId        Int
+  guide          Guide          @relation(fields: [guideId], references: [id])
   startDate      DateTime
   status         BookingStatus  @default(PENDING)
   numberOfPeople Int            @default(1)
