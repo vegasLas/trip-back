@@ -2,6 +2,8 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import bot from './bot';
+import apiRoutes from './routes';
+import { errorHandler } from './middlewares/errorHandler';
 
 // Load environment variables
 dotenv.config();
@@ -35,29 +37,13 @@ if (WEBHOOK_URL && BOT_TOKEN) {
   console.log(`Telegram webhook endpoint set up at ${webhookPath}`);
 }
 
-// Import and use API routes (to be implemented)
-// import userRoutes from './routes/userRoutes';
-// import programRoutes from './routes/programRoutes';
-// import bookingRoutes from './routes/bookingRoutes';
-// import auctionRoutes from './routes/auctionRoutes';
+// Mount API routes
+app.use('/api', apiRoutes);
 
-// app.use('/api/users', userRoutes);
-// app.use('/api/programs', programRoutes);
-// app.use('/api/bookings', bookingRoutes);
-// app.use('/api/auctions', auctionRoutes);
+// Global error handling middleware
+app.use(errorHandler);
 
-// Basic error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err);
-  res.status(500).json({ 
-    status: 'error', 
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message 
-  });
-});
-
-// 404 middleware
+// 404 middleware - this should be after all routes
 app.use((req: Request, res: Response) => {
   res.status(404).json({ status: 'error', message: 'Resource not found' });
 });

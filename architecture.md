@@ -391,14 +391,12 @@ This document outlines the implementation plan for a Telegram Mini App that allo
 2. **Authentication utility functions**
    - Create a utility file for handling Telegram init data validation
    - Implement functions to parse and verify the data signature
-   - Set up user session management
 
 3. **User registration/login flow**
    - Create endpoint to receive init data from Telegram Mini App
    - Validate the data and extract user information
    - Check if BaseUser exists in database, create if not
    - Create associated Tourist or Guide record if needed
-   - Generate session token for authenticated requests
 
 ### Step 4: API Routes Implementation
 

@@ -50,12 +50,14 @@ model Guide {
   avatarUrl     String?
   rating        Float?    // Average rating
   isActive      Boolean   @default(true)  // Guide's availability status
+  tokenBalance  Int       @default(0)     // Token balance for paying for services
   selectedPrograms Program[] @relation("GuideSelectedPrograms") // Programs the guide has selected to work on
   programs      Program[] // Programs created by guide
   receivedReviews Review[] @relation("GuideReviews")
   bids          Bid[]
   recommendations ProgramRecommendation[] // Program recommendations made by the guide
   payments      Payment[] // Payments associated with this guide
+  tokenTransactions TokenTransaction[] // Token transactions for this guide
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -202,6 +204,7 @@ model Review {
   rating        Int            // 1-5 stars
   comment       String?
   createdAt     DateTime       @default(now())
+  active        Boolean        @default(true)
   updatedAt     DateTime       @updatedAt
 }
 
@@ -280,12 +283,19 @@ model Payment {
   id             Int            @id @default(autoincrement())
   guideId        Int
   guide          Guide          @relation(fields: [guideId], references: [id])
+  amount         Float          // Payment amount
+  method         String?        // Payment method (e.g., card, bank transfer)
   currency       String         @default("RUB")
   status         PaymentStatus  @default(PENDING)
   paymentType    PaymentType
-  idempotencyKey    Int?           // ID of related Auction or DirectRequest
-  tariff         Tariff? @relation(fields: [tariffId], references: [id])
-  tariffId        Int?
+  description    String?        // Payment description
+  paymentIntentId String?       // External payment ID from payment provider
+  paymentUrl     String?        // URL for payment processing
+  completedAt    DateTime?      // When payment was completed
+  idempotencyKey Int?           // ID of related Auction or DirectRequest
+  tariff         Tariff?        @relation(fields: [tariffId], references: [id])
+  tariffId       Int?
+  tokenTransactions TokenTransaction[] // Related token transactions
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
@@ -312,4 +322,33 @@ enum PaymentType {
   AUCTION_BID
   DIRECT_BOOKING
   TARIFF
+  TOKEN_PURCHASE
+}
+
+// Token transaction model for tracking token purchases and usage
+model TokenTransaction {
+  id             Int                  @id @default(autoincrement())
+  guideId        Int
+  guide          Guide                @relation(fields: [guideId], references: [id])
+  amount         Int                  // Number of tokens
+  type           TokenTransactionType // Type of transaction
+  status         TransactionStatus    @default(PENDING)
+  description    String?              // Transaction description
+  payment        Payment?             @relation(fields: [paymentId], references: [id])
+  paymentId      Int?                 // Related payment if it's a purchase
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+enum TokenTransactionType {
+  PURCHASE  // Adding tokens
+  USAGE     // Using tokens
+  REFUND    // Refunding tokens
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
 }
