@@ -2,9 +2,20 @@ import { Request, Response } from 'express';
 import * as paymentService from '../services/paymentService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
+import {
+  CreatePaymentController,
+  GetPaymentByIdController,
+  ProcessPaymentController,
+  GetGuidePaymentsController,
+  GetTokenTransactionsController,
+  CreateTokenTransactionController,
+  IdParams,
+  CreatePaymentRequest,
+  CreateTokenTransactionRequest
+} from '../types';
 
 // Initiate a token purchase for a guide
-export const initiatePayment = catchAsync(async (req: Request, res: Response) => {
+export const initiatePayment: CreatePaymentController = catchAsync(async (req: CreatePaymentRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can purchase tokens');
   }
@@ -21,7 +32,7 @@ export const initiatePayment = catchAsync(async (req: Request, res: Response) =>
 });
 
 // Get payment details
-export const getPaymentDetails = catchAsync(async (req: Request, res: Response) => {
+export const getPaymentDetails: GetPaymentByIdController = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -46,7 +57,7 @@ export const getPaymentDetails = catchAsync(async (req: Request, res: Response) 
 });
 
 // Handle payment callback from payment provider
-export const handlePaymentCallback = catchAsync(async (req: Request, res: Response) => {
+export const handlePaymentCallback: ProcessPaymentController = catchAsync(async (req: IdParams, res: Response) => {
   const paymentId = parseInt(req.params.id);
   
   if (isNaN(paymentId)) {
@@ -67,7 +78,7 @@ export const getTouristPaymentHistory = catchAsync(async (req: Request, res: Res
 });
 
 // Get guide's token purchase history and current balance
-export const getGuidePaymentsReceived = catchAsync(async (req: Request, res: Response) => {
+export const getGuidePaymentsReceived: GetGuidePaymentsController = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -84,7 +95,7 @@ export const getGuidePaymentsReceived = catchAsync(async (req: Request, res: Res
 });
 
 // Use tokens for a service/feature
-export const useTokens = catchAsync(async (req: Request, res: Response) => {
+export const useTokens: CreateTokenTransactionController = catchAsync(async (req: CreateTokenTransactionRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can use tokens');
   }
@@ -118,7 +129,7 @@ export const getTokenBalance = catchAsync(async (req: Request, res: Response) =>
 });
 
 // Get guide's token transaction history
-export const getTokenTransactions = catchAsync(async (req: Request, res: Response) => {
+export const getTokenTransactions: GetTokenTransactionsController = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }

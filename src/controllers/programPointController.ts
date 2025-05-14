@@ -2,9 +2,28 @@ import { Request, Response } from 'express';
 import * as programPointService from '../services/programPointService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
+import {
+  GetProgramPointsController,
+  CreateProgramPointController,
+  UpdateProgramPointController,
+  DeleteProgramPointController,
+  CreateProgramPointRequest,
+  UpdateProgramPointRequest
+} from '../types';
+
+// Custom interface for program, day and point ID parameters
+interface ProgramPointParams extends Request {
+  params: {
+    programId: string;
+    dayId: string;
+    pointId?: string;
+    id?: string;
+  };
+  user?: any;
+}
 
 // Get all points for a day
-export const getProgramPoints = catchAsync(async (req: Request, res: Response) => {
+export const getProgramPoints: GetProgramPointsController = catchAsync(async (req: ProgramPointParams, res: Response) => {
   const programId = parseInt(req.params.programId);
   const dayId = parseInt(req.params.dayId);
   
@@ -22,7 +41,7 @@ export const getProgramPoints = catchAsync(async (req: Request, res: Response) =
 });
 
 // Add new point to a day
-export const createProgramPoint = catchAsync(async (req: Request, res: Response) => {
+export const createProgramPoint: CreateProgramPointController = catchAsync(async (req: CreateProgramPointRequest & ProgramPointParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can add points to program days');
   }
@@ -46,14 +65,14 @@ export const createProgramPoint = catchAsync(async (req: Request, res: Response)
 });
 
 // Update a point
-export const updateProgramPoint = catchAsync(async (req: Request, res: Response) => {
+export const updateProgramPoint: UpdateProgramPointController = catchAsync(async (req: UpdateProgramPointRequest & ProgramPointParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update program points');
   }
   
   const programId = parseInt(req.params.programId);
   const dayId = parseInt(req.params.dayId);
-  const pointId = parseInt(req.params.pointId);
+  const pointId = parseInt(req.params.id || req.params.pointId || '');
   
   if (isNaN(programId) || isNaN(dayId) || isNaN(pointId)) {
     throw new BadRequestError('Invalid program ID, day ID, or point ID');
@@ -77,14 +96,14 @@ export const updateProgramPoint = catchAsync(async (req: Request, res: Response)
 });
 
 // Delete a point
-export const deleteProgramPoint = catchAsync(async (req: Request, res: Response) => {
+export const deleteProgramPoint: DeleteProgramPointController = catchAsync(async (req: ProgramPointParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can delete program points');
   }
   
   const programId = parseInt(req.params.programId);
   const dayId = parseInt(req.params.dayId);
-  const pointId = parseInt(req.params.pointId);
+  const pointId = parseInt(req.params.id || req.params.pointId || '');
   
   if (isNaN(programId) || isNaN(dayId) || isNaN(pointId)) {
     throw new BadRequestError('Invalid program ID, day ID, or point ID');
