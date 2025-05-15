@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as auctionService from '../services/auctionService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -17,6 +18,24 @@ import {
   UpdateAuctionRequest,
   PlaceBidRequest
 } from '../types';
+
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
+
+// Helper function to get tourist ID from user ID
+const getTouristIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.tourist) {
+    throw new BadRequestError('User is not a tourist');
+  }
+  return user.tourist.id;
+};
 
 // Get active/ongoing auctions
 export const getActiveAuctions: GetActiveAuctionsController = catchAsync(async (req: Request, res: Response) => {
@@ -51,8 +70,8 @@ export const createAuction: CreateAuctionController = catchAsync(async (req: Cre
     throw new ForbiddenError('Only guides can create auctions');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const auction = await auctionService.createAuction(guideId, req.body);
   
@@ -74,8 +93,8 @@ export const updateAuction: UpdateAuctionController = catchAsync(async (req: Upd
     throw new BadRequestError('Invalid auction ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const auction = await auctionService.updateAuction(auctionId, guideId, req.body);
   
@@ -97,8 +116,8 @@ export const deleteAuction: DeleteAuctionController = catchAsync(async (req: IdP
     throw new BadRequestError('Invalid auction ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   await auctionService.deleteAuction(auctionId, guideId);
   
@@ -117,8 +136,8 @@ export const endAuction: EndAuctionController = catchAsync(async (req: IdParams,
     throw new BadRequestError('Invalid auction ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const auction = await auctionService.closeAuction(auctionId, guideId);
   
@@ -140,8 +159,8 @@ export const placeBid: PlaceBidController = catchAsync(async (req: PlaceBidReque
     throw new BadRequestError('Invalid auction ID');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const bid = await auctionService.placeBid(auctionId, touristId, req.body);
   
@@ -157,8 +176,8 @@ export const getTouristBiddedAuctions: GetTouristBiddedAuctionsController = catc
     throw new ForbiddenError('Unauthorized access');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const auctions = await auctionService.getTouristBiddedAuctions(touristId);
   
@@ -175,8 +194,8 @@ export const getGuideAuctions: GetGuideAuctionsController = catchAsync(async (re
     throw new ForbiddenError('Unauthorized access');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const auctions = await auctionService.getGuideAuctions(guideId);
   

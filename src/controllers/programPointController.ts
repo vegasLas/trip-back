@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as programPointService from '../services/programPointService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -10,6 +11,15 @@ import {
   CreateProgramPointRequest,
   UpdateProgramPointRequest
 } from '../types';
+
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
 
 // Custom interface for program, day and point ID parameters
 interface ProgramPointParams extends Request {
@@ -53,8 +63,8 @@ export const createProgramPoint: CreateProgramPointController = catchAsync(async
     throw new BadRequestError('Invalid program ID or day ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const point = await programPointService.createProgramPoint(programId, dayId, guideId, req.body);
   
@@ -78,8 +88,8 @@ export const updateProgramPoint: UpdateProgramPointController = catchAsync(async
     throw new BadRequestError('Invalid program ID, day ID, or point ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const point = await programPointService.updateProgramPoint(
     programId, 
@@ -109,8 +119,8 @@ export const deleteProgramPoint: DeleteProgramPointController = catchAsync(async
     throw new BadRequestError('Invalid program ID, day ID, or point ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   await programPointService.deleteProgramPoint(programId, dayId, pointId, guideId);
   

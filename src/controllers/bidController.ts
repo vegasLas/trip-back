@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as bidService from '../services/bidService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -11,6 +12,24 @@ import {
   CreateBidRequest,
   IdParams
 } from '../types';
+
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
+
+// Helper function to get tourist ID from user ID
+const getTouristIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.tourist) {
+    throw new BadRequestError('User is not a tourist');
+  }
+  return user.tourist.id;
+};
 
 // Custom interface for auction ID parameters
 interface AuctionParams extends Request {
@@ -43,8 +62,8 @@ export const getTouristBids: GetGuideBidsController = catchAsync(async (req: Req
     throw new ForbiddenError('Unauthorized access');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const bids = await bidService.getGuideBids(touristId);
   
@@ -61,8 +80,8 @@ export const createBid: CreateBidController = catchAsync(async (req: CreateBidRe
     throw new ForbiddenError('Only tourists can place bids');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const bid = await bidService.createBid(touristId, req.body);
   
@@ -84,8 +103,8 @@ export const cancelBid: DeleteBidController = catchAsync(async (req: IdParams, r
     throw new BadRequestError('Invalid bid ID');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   await bidService.cancelBid(bidId, touristId);
   
@@ -104,8 +123,8 @@ export const getGuideAuctionBids: GetAuctionBidsController = catchAsync(async (r
     throw new BadRequestError('Invalid auction ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const bids = await bidService.getAuctionBids(auctionId);
   

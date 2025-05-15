@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as reviewService from '../services/reviewService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -13,6 +14,15 @@ import {
   CreateReviewRequest,
   UpdateReviewRequest
 } from '../types';
+
+// Helper function to get tourist ID from user ID
+const getTouristIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.tourist) {
+    throw new BadRequestError('User is not a tourist');
+  }
+  return user.tourist.id;
+};
 
 // Get reviews for a program
 export const getProgramReviews: GetProgramReviewsController = catchAsync(async (req: IdParams, res: Response) => {
@@ -70,8 +80,8 @@ export const createReview: CreateReviewController = catchAsync(async (req: Creat
     throw new ForbiddenError('Only tourists can create reviews');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const review = await reviewService.createReview(touristId, req.body);
   
@@ -93,8 +103,8 @@ export const updateReview: UpdateReviewController = catchAsync(async (req: Updat
     throw new BadRequestError('Invalid review ID');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const review = await reviewService.updateReview(reviewId, touristId, req.body);
   
@@ -116,8 +126,8 @@ export const deleteReview: DeleteReviewController = catchAsync(async (req: IdPar
     throw new BadRequestError('Invalid review ID');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   await reviewService.deleteReview(reviewId, touristId);
   

@@ -12,6 +12,24 @@ import {
   UpdateGuideRequest
 } from '../types';
 
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
+
+// Helper function to get tourist ID from user ID
+const getTouristIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.tourist) {
+    throw new BadRequestError('User is not a tourist');
+  }
+  return user.tourist.id;
+};
+
 // Get current user profile
 export const getCurrentUser: GetProfileController = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -63,7 +81,7 @@ export const registerAsGuide: UpdateGuideProfileController = catchAsync(async (r
   }
   
   // Validate required fields
-  const { bio, languages, specialties } = req.body;
+  const { languages, specialties } = req.body;
   const errors: Record<string, string> = {};
   
   if (!languages || !Array.isArray(languages) || languages.length === 0) {
@@ -98,8 +116,8 @@ export const updateGuideStatus: UpdateGuideProfileController = catchAsync(async 
     throw new BadRequestError('isActive must be a boolean value');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const guide = await userService.updateGuideStatus(guideId, isActive);
   
@@ -121,8 +139,8 @@ export const updateGuidePrograms = catchAsync(async (req: Request, res: Response
     throw new BadRequestError('programIds must be an array of program IDs');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const guide = await userService.updateGuidePrograms(guideId, programIds);
   
@@ -138,8 +156,8 @@ export const getGuidePrograms = catchAsync(async (req: Request, res: Response) =
     throw new BadRequestError('User is not a guide');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const programs = await userService.getGuidePrograms(guideId);
   
