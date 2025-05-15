@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as paymentService from '../services/paymentService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -14,14 +15,23 @@ import {
   CreateTokenTransactionRequest
 } from '../types';
 
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
+
 // Initiate a token purchase for a guide
 export const initiatePayment: CreatePaymentController = catchAsync(async (req: CreatePaymentRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can purchase tokens');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const payment = await paymentService.initiatePayment(guideId, req.body);
   
@@ -83,8 +93,8 @@ export const getGuidePaymentsReceived: GetGuidePaymentsController = catchAsync(a
     throw new ForbiddenError('Unauthorized access');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const result = await paymentService.getGuidePaymentsReceived(guideId);
   
@@ -100,8 +110,8 @@ export const useTokens: CreateTokenTransactionController = catchAsync(async (req
     throw new ForbiddenError('Only guides can use tokens');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const result = await paymentService.useTokens(guideId, req.body);
   
@@ -117,8 +127,8 @@ export const getTokenBalance = catchAsync(async (req: Request, res: Response) =>
     throw new ForbiddenError('Unauthorized access');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const balance = await paymentService.getGuideTokenBalance(guideId);
   
@@ -134,8 +144,8 @@ export const getTokenTransactions: GetTokenTransactionsController = catchAsync(a
     throw new ForbiddenError('Unauthorized access');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const transactions = await paymentService.getTokenTransactionHistory(guideId);
   

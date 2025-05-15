@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as programService from '../services/programService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -13,6 +14,24 @@ import {
   CreateProgramRequest,
   UpdateProgramRequest
 } from '../types';
+
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
+
+// Helper function to get tourist ID from user ID
+const getTouristIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.tourist) {
+    throw new BadRequestError('User is not a tourist');
+  }
+  return user.tourist.id;
+};
 
 // Get all programs with filtering
 export const getAllPrograms: GetProgramsController = catchAsync(async (req: ProgramFilterRequest, res: Response) => {
@@ -65,8 +84,8 @@ export const createProgram: CreateProgramController = catchAsync(async (req: Cre
     throw new ForbiddenError('Only guides can create programs');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const program = await programService.createProgram(guideId, req.body);
   
@@ -88,8 +107,8 @@ export const updateProgram: UpdateProgramController = catchAsync(async (req: Upd
     throw new BadRequestError('Invalid program ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const program = await programService.updateProgram(programId, guideId, req.body);
   
@@ -111,8 +130,8 @@ export const deleteProgram: DeleteProgramController = catchAsync(async (req: IdP
     throw new BadRequestError('Invalid program ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   await programService.deleteProgram(programId, guideId);
   
@@ -131,8 +150,8 @@ export const requestDirectBooking = catchAsync(async (req: Request, res: Respons
     throw new BadRequestError('Invalid program ID');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const request = await programService.createDirectRequest(programId, touristId, req.body);
   
@@ -155,8 +174,8 @@ export const respondToDirectRequest = catchAsync(async (req: Request, res: Respo
     throw new BadRequestError('Invalid program ID or request ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const response = await programService.respondToDirectRequest(requestId, guideId, req.body);
   
@@ -178,8 +197,8 @@ export const recommendProgram = catchAsync(async (req: Request, res: Response) =
     throw new BadRequestError('Invalid program ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const recommendation = await programService.recommendProgram(programId, guideId, req.body);
   

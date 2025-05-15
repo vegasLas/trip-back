@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as bookingService from '../services/bookingService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -12,6 +13,15 @@ import {
   CreateBookingRequest,
   UpdateBookingRequest
 } from '../types';
+
+// Helper function to get tourist ID from user ID
+const getTouristIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.tourist) {
+    throw new BadRequestError('User is not a tourist');
+  }
+  return user.tourist.id;
+};
 
 // List user bookings
 export const getUserBookings: GetTouristBookingsController = catchAsync(async (req: Request, res: Response) => {
@@ -62,8 +72,8 @@ export const createBooking: CreateBookingController = catchAsync(async (req: Cre
     throw new ForbiddenError('Only tourists can create bookings');
   }
   
-  // TODO: Get tourist ID from user ID
-  const touristId = 1; // This is a placeholder
+  // Get tourist ID from user ID
+  const touristId = await getTouristIdFromUser(req.user.id);
   
   const booking = await bookingService.createBooking(touristId, req.body);
   

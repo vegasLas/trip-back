@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as tariffService from '../services/tariffService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -11,6 +12,15 @@ import {
   UpdateTariffRequest,
   IdParams
 } from '../types';
+
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
 
 // Custom interface for program ID parameters
 interface ProgramParams extends Request {
@@ -49,8 +59,8 @@ export const createProgramTariff: CreateTariffController = catchAsync(async (req
     throw new BadRequestError('Invalid program ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const tariff = await tariffService.createProgramTariff(programId, guideId, req.body);
   
@@ -72,8 +82,8 @@ export const updateProgramTariff: UpdateTariffController = catchAsync(async (req
     throw new BadRequestError('Invalid tariff ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const tariff = await tariffService.updateProgramTariff(tariffId, guideId, req.body);
   
@@ -95,8 +105,8 @@ export const deleteProgramTariff: DeleteTariffController = catchAsync(async (req
     throw new BadRequestError('Invalid tariff ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   await tariffService.deleteProgramTariff(tariffId, guideId);
   
@@ -115,8 +125,8 @@ export const toggleTariffStatus: UpdateTariffController = catchAsync(async (req:
     throw new BadRequestError('Invalid tariff ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const tariff = await tariffService.toggleTariffStatus(tariffId, guideId);
   

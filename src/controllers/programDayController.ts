@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as programDayService from '../services/programDayService';
+import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
@@ -11,6 +12,15 @@ import {
   CreateProgramDayRequest,
   UpdateProgramDayRequest,
 } from '../types';
+
+// Helper function to get guide ID from user ID
+const getGuideIdFromUser = async (userId: number): Promise<number> => {
+  const user = await userService.getUserProfile(userId);
+  if (!user.guide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  return user.guide.id;
+};
 
 // Custom interface for program and day ID parameters
 interface ProgramDayParams extends Request {
@@ -67,8 +77,8 @@ export const createProgramDay: CreateProgramDayController = catchAsync(async (re
     throw new BadRequestError('Invalid program ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const day = await programDayService.createProgramDay(programId, guideId, req.body);
   
@@ -91,8 +101,8 @@ export const updateProgramDay: UpdateProgramDayController = catchAsync(async (re
     throw new BadRequestError('Invalid program ID or day ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   const day = await programDayService.updateProgramDay(programId, dayId, guideId, req.body);
   
@@ -115,8 +125,8 @@ export const deleteProgramDay: DeleteProgramDayController = catchAsync(async (re
     throw new BadRequestError('Invalid program ID or day ID');
   }
   
-  // TODO: Get guide ID from user ID
-  const guideId = 1; // This is a placeholder
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
   
   await programDayService.deleteProgramDay(programId, dayId, guideId);
   
