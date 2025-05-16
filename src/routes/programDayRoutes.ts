@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as programDayController from '../controllers/programDayController';
 import programPointRoutes from './programPointRoutes';
-import { validateTelegramAuth, requireGuide } from '../middlewares/auth';
+import { validateTelegramAuth, requireGuide, requireAdmin } from '../middlewares/auth';
 
 const router = Router({ mergeParams: true });
 
@@ -12,9 +12,9 @@ router.use('/:dayId/points', programPointRoutes);
 router.get('/', programDayController.getProgramDays);
 router.get('/:dayId', programDayController.getProgramDayById);
 
-// Protected routes
-router.post('/', validateTelegramAuth, requireGuide, programDayController.createProgramDay);
-router.put('/:dayId', validateTelegramAuth, requireGuide, programDayController.updateProgramDay);
-router.delete('/:dayId', validateTelegramAuth, requireGuide, programDayController.deleteProgramDay);
+// Admin routes
+router.post('/', validateTelegramAuth, requireAdmin, programDayController.createProgramDay);
+router.put('/:dayId', validateTelegramAuth, requireAdmin, programDayController.updateProgramDay);
+router.delete('/:dayId', validateTelegramAuth, requireAdmin, programDayController.deleteProgramDay);
 
 export default router; 

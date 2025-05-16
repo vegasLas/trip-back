@@ -11,17 +11,15 @@ router.get('/:id', auctionController.getAuctionById);
 // Protected routes - authentication required
 router.use(validateTelegramAuth);
 
-// Guide routes - only guides can create and manage auctions
-router.post('/', requireGuide, auctionController.createAuction);
-router.put('/:id', requireGuide, auctionController.updateAuction);
-router.delete('/:id', requireGuide, auctionController.deleteAuction);
-router.post('/:id/end', requireGuide, auctionController.endAuction);
+// Tourist routes - tourists create and manage auctions
+router.post('/', requireTourist, auctionController.createAuction);
+router.put('/:id', requireTourist, auctionController.updateAuction);
+router.delete('/:id', requireTourist, auctionController.deleteAuction);
+router.post('/:id/end', requireTourist, auctionController.endAuction);
+router.get('/tourist/auctions', requireTourist, auctionController.getGuideAuctions);
 
-// Tourist routes - only tourists can bid on auctions
-router.post('/:id/bids', requireTourist, auctionController.placeBid);
-router.get('/tourist/bidded', requireTourist, auctionController.getTouristBiddedAuctions);
-
-// Guide-specific routes - view own auctions
-router.get('/guide/own', requireGuide, auctionController.getGuideAuctions);
+// Guide routes - guides place bids on auctions
+router.post('/:id/bids', requireGuide, auctionController.placeBid);
+router.get('/guide/bidded', requireGuide, auctionController.getTouristBiddedAuctions);
 
 export default router; 

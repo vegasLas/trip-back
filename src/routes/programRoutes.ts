@@ -16,15 +16,17 @@ router.get('/', programController.getAllPrograms);
 router.get('/:id', programController.getProgramById);
 router.get('/:id/guides', programController.getProgramGuides);
 
-// Protected routes
-router.post('/', requireGuide, programController.createProgram);
-router.put('/:id', requireGuide, programController.updateProgram);
-router.delete('/:id', requireGuide, programController.deleteProgram);
-router.post('/:id/request', requireTourist, programController.requestDirectBooking);
-router.put('/:id/request/:requestId/respond', requireGuide, programController.respondToDirectRequest);
+// Guide routes
 router.post('/:id/recommend', requireGuide, programController.recommendProgram);
+router.put('/:id/request/:requestId/respond', requireGuide, programController.respondToDirectRequest);
+
+// Tourist routes
+router.post('/:id/request', requireTourist, programController.requestDirectBooking);
 
 // Admin routes
+router.post('/', requireAdmin, programController.createProgram);
+router.put('/:id', requireAdmin, programController.updateProgram);
+router.delete('/:id', requireAdmin, programController.deleteProgram);
 router.get('/recommendations', requireAdmin, programController.getAllProgramRecommendations);
 router.put('/recommendations/:id/approve', requireAdmin, programController.approveRecommendation);
 router.put('/recommendations/:id/reject', requireAdmin, programController.rejectRecommendation);
