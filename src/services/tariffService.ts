@@ -39,10 +39,10 @@ export const createProgramTariff = async (programId: number, guideId: number, ta
   }
   
   // Validate tariff data
-  const { name, description, minPeople, maxPeople, pricePerPerson } = tariffData;
+  const { title, description, minPeople, maxPeople, pricePerPerson } = tariffData;
   
-  if (!name || !minPeople || !maxPeople || !pricePerPerson) {
-    throw new BadRequestError('Name, minimum people, maximum people, and price per person are required');
+  if (!title || !minPeople || !maxPeople || !pricePerPerson) {
+    throw new BadRequestError('Title, minimum people, maximum people, and price per person are required');
   }
   
   // Validate numerical values
@@ -74,7 +74,7 @@ export const createProgramTariff = async (programId: number, guideId: number, ta
   for (const tier of existingTiers) {
     if ((min <= tier.maxPeople && max >= tier.minPeople)) {
       throw new BadRequestError(
-        `This tier overlaps with existing tier "${tier.name}" (${tier.minPeople}-${tier.maxPeople} people)`
+        `This tier overlaps with existing tier "${tier.title}" (${tier.minPeople}-${tier.maxPeople} people)`
       );
     }
   }
@@ -83,7 +83,7 @@ export const createProgramTariff = async (programId: number, guideId: number, ta
   const pricingTier = await prisma.pricingTier.create({
     data: {
       programId,
-      name,
+      title,
       description: description || '',
       minPeople: min,
       maxPeople: max,
@@ -118,11 +118,11 @@ export const updateProgramTariff = async (tariffId: number, guideId: number, upd
   }
   
   // Extract updatable fields
-  const { name, description, minPeople, maxPeople, pricePerPerson } = updateData;
+  const { title, description, minPeople, maxPeople, pricePerPerson } = updateData;
   
   // Prepare update object
   const updateObj: any = {};
-  if (name !== undefined) updateObj.name = name;
+  if (title !== undefined) updateObj.title = title;
   if (description !== undefined) updateObj.description = description;
   
   // Handle numerical values
@@ -170,7 +170,7 @@ export const updateProgramTariff = async (tariffId: number, guideId: number, upd
   for (const tier of existingTiers) {
     if ((min <= tier.maxPeople && max >= tier.minPeople)) {
       throw new BadRequestError(
-        `This tier would overlap with existing tier "${tier.name}" (${tier.minPeople}-${tier.maxPeople} people)`
+        `This tier would overlap with existing tier "${tier.title}" (${tier.minPeople}-${tier.maxPeople} people)`
       );
     }
   }

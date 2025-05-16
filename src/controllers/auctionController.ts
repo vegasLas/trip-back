@@ -4,15 +4,6 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
-  GetActiveAuctionsController,
-  GetAuctionByIdController,
-  CreateAuctionController,
-  UpdateAuctionController,
-  DeleteAuctionController,
-  EndAuctionController,
-  PlaceBidController,
-  GetTouristBiddedAuctionsController,
-  GetGuideAuctionsController,
   IdParams,
   CreateAuctionRequest,
   UpdateAuctionRequest,
@@ -38,7 +29,7 @@ const getTouristIdFromUser = async (userId: number): Promise<number> => {
 };
 
 // Get active/ongoing auctions
-export const getActiveAuctions: GetActiveAuctionsController = catchAsync(async (req: Request, res: Response) => {
+export const getActiveAuctions = catchAsync(async (_: Request, res: Response) => {
   const auctions = await auctionService.getActiveAuctions();
   
   res.status(200).json({
@@ -49,7 +40,7 @@ export const getActiveAuctions: GetActiveAuctionsController = catchAsync(async (
 });
 
 // Get auction by ID
-export const getAuctionById: GetAuctionByIdController = catchAsync(async (req: IdParams, res: Response) => {
+export const getAuctionById = catchAsync(async (req: IdParams, res: Response) => {
   const auctionId = parseInt(req.params.id);
   
   if (isNaN(auctionId)) {
@@ -65,7 +56,7 @@ export const getAuctionById: GetAuctionByIdController = catchAsync(async (req: I
 });
 
 // Create new auction (guide only)
-export const createAuction: CreateAuctionController = catchAsync(async (req: CreateAuctionRequest, res: Response) => {
+export const createAuction = catchAsync(async (req: CreateAuctionRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can create auctions');
   }
@@ -82,7 +73,7 @@ export const createAuction: CreateAuctionController = catchAsync(async (req: Cre
 });
 
 // Update auction
-export const updateAuction: UpdateAuctionController = catchAsync(async (req: UpdateAuctionRequest, res: Response) => {
+export const updateAuction = catchAsync(async (req: UpdateAuctionRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update auctions');
   }
@@ -105,7 +96,7 @@ export const updateAuction: UpdateAuctionController = catchAsync(async (req: Upd
 });
 
 // Delete auction
-export const deleteAuction: DeleteAuctionController = catchAsync(async (req: IdParams, res: Response) => {
+export const deleteAuction = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can delete auctions');
   }
@@ -125,7 +116,7 @@ export const deleteAuction: DeleteAuctionController = catchAsync(async (req: IdP
 });
 
 // End auction early
-export const endAuction: EndAuctionController = catchAsync(async (req: IdParams, res: Response) => {
+export const endAuction = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can end auctions');
   }
@@ -148,7 +139,7 @@ export const endAuction: EndAuctionController = catchAsync(async (req: IdParams,
 });
 
 // Place bid on auction
-export const placeBid: PlaceBidController = catchAsync(async (req: PlaceBidRequest, res: Response) => {
+export const placeBid = catchAsync(async (req: PlaceBidRequest, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Only tourists can place bids');
   }
@@ -171,7 +162,7 @@ export const placeBid: PlaceBidController = catchAsync(async (req: PlaceBidReque
 });
 
 // Get auctions a tourist has bid on
-export const getTouristBiddedAuctions: GetTouristBiddedAuctionsController = catchAsync(async (req: Request, res: Response) => {
+export const getTouristBiddedAuctions = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -189,7 +180,7 @@ export const getTouristBiddedAuctions: GetTouristBiddedAuctionsController = catc
 });
 
 // Get guide's own auctions
-export const getGuideAuctions: GetGuideAuctionsController = catchAsync(async (req: Request, res: Response) => {
+export const getGuideAuctions = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }

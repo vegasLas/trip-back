@@ -4,23 +4,9 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
-  GetBidsController,
-  GetAuctionBidsController,
-  CreateBidController,
-  DeleteBidController,
-  GetGuideBidsController,
   CreateBidRequest,
   IdParams
 } from '../types';
-
-// Helper function to get guide ID from user ID
-const getGuideIdFromUser = async (userId: number): Promise<number> => {
-  const user = await userService.getUserProfile(userId);
-  if (!user.guide) {
-    throw new BadRequestError('User is not a guide');
-  }
-  return user.guide.id;
-};
 
 // Helper function to get tourist ID from user ID
 const getTouristIdFromUser = async (userId: number): Promise<number> => {
@@ -40,7 +26,7 @@ interface AuctionParams extends Request {
 }
 
 // Get all bids for an auction
-export const getAuctionBids: GetAuctionBidsController = catchAsync(async (req: AuctionParams, res: Response) => {
+export const getAuctionBids = catchAsync(async (req: AuctionParams, res: Response) => {
   const auctionId = parseInt(req.params.auctionId);
   
   if (isNaN(auctionId)) {
@@ -57,7 +43,7 @@ export const getAuctionBids: GetAuctionBidsController = catchAsync(async (req: A
 });
 
 // Get all bids made by a tourist
-export const getTouristBids: GetGuideBidsController = catchAsync(async (req: Request, res: Response) => {
+export const getTouristBids = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -75,8 +61,8 @@ export const getTouristBids: GetGuideBidsController = catchAsync(async (req: Req
 });
 
 // Create a new bid
-export const createBid: CreateBidController = catchAsync(async (req: CreateBidRequest, res: Response) => {
-  if (!req.user || !req.user.isTourist) {
+export const createBid = catchAsync(async (req: CreateBidRequest, res: Response) => {
+  if (!req.user || !req.body) {
     throw new ForbiddenError('Only tourists can place bids');
   }
   
@@ -92,7 +78,7 @@ export const createBid: CreateBidController = catchAsync(async (req: CreateBidRe
 });
 
 // Cancel a bid
-export const cancelBid: DeleteBidController = catchAsync(async (req: IdParams, res: Response) => {
+export const cancelBid = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Only tourists can cancel their bids');
   }
@@ -112,7 +98,7 @@ export const cancelBid: DeleteBidController = catchAsync(async (req: IdParams, r
 });
 
 // Get bids for a guide's auction
-export const getGuideAuctionBids: GetAuctionBidsController = catchAsync(async (req: AuctionParams, res: Response) => {
+export const getGuideAuctionBids = catchAsync(async (req: AuctionParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -123,8 +109,6 @@ export const getGuideAuctionBids: GetAuctionBidsController = catchAsync(async (r
     throw new BadRequestError('Invalid auction ID');
   }
   
-  // Get guide ID from user ID
-  const guideId = await getGuideIdFromUser(req.user.id);
   
   const bids = await bidService.getAuctionBids(auctionId);
   
@@ -136,7 +120,7 @@ export const getGuideAuctionBids: GetAuctionBidsController = catchAsync(async (r
 });
 
 // Get highest bids for all of guide's auctions
-export const getHighestBidsForGuideAuctions: GetBidsController = catchAsync(async (req: Request, res: Response) => {
+export const getHighestBidsForGuideAuctions = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }

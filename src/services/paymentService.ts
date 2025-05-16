@@ -64,7 +64,7 @@ export const initiatePayment = async (guideId: number, paymentData: any) => {
   };
 };
 
-export const getPaymentDetails = async (paymentId: number, userId: number, isTourist: boolean, isGuide: boolean) => {
+export const getPaymentDetails = async (paymentId: number, userId: number, isGuide: boolean) => {
   // Get the payment with details
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
@@ -169,10 +169,6 @@ export const processPaymentCallback = async (paymentId: number, callbackData: an
   return updatedPayment;
 };
 
-export const getTouristPaymentHistory = async (touristId: number) => {
-  // This method is not relevant for token management
-  throw new BadRequestError('Operation not supported for token management');
-};
 
 export const getGuidePaymentsReceived = async (guideId: number) => {
   // Get guide token purchase history
@@ -220,15 +216,6 @@ export const getGuidePaymentsReceived = async (guideId: number) => {
   };
 };
 
-export const initiateWithdrawal = async (guideId: number, withdrawalData: any) => {
-  // Token system doesn't support withdrawals, but guides might request refunds
-  throw new BadRequestError('Withdrawals are not supported for token management');
-};
-
-export const getWithdrawalStatus = async (withdrawalId: number, guideId: number) => {
-  // Token system doesn't support withdrawals
-  throw new BadRequestError('Withdrawals are not supported for token management');
-};
 
 // New methods for token management
 

@@ -24,7 +24,7 @@ export const getUserBookings = async (userId: number, isTourist: boolean) => {
             description: true,
             basePrice: true,
             durationDays: true,
-            imageUrls: true,
+            images: true,
             guide: {
               include: {
                 baseUser: {
@@ -165,7 +165,7 @@ export const getBookingById = async (bookingId: number, userId: number, isTouris
 
 export const createBooking = async (touristId: number, bookingData: any) => {
   // Validate required fields
-  const { programId, startDate, numberOfPeople, pricingTierId } = bookingData;
+  const { programId, startDate, numberOfPeople, pricingTierId, guideId } = bookingData;
   
   if (!programId || !startDate || !numberOfPeople) {
     throw new BadRequestError('Program ID, start date, and number of people are required');
@@ -226,6 +226,7 @@ export const createBooking = async (touristId: number, bookingData: any) => {
   const booking = await prisma.booking.create({
     data: {
       programId: parseInt(programId),
+      guideId,
       touristId,
       startDate: new Date(startDate),
       numberOfPeople: parseInt(numberOfPeople),
@@ -310,7 +311,7 @@ export const updateBookingStatus = async (bookingId: number, userId: number, isG
       where: { baseUserId: userId }
     });
     
-    if (!guide || guide.id !== booking.program.guideId) {
+    if (!guide || guide.id !== booking.guideId) {
       throw new ForbiddenError('You are not authorized to update this booking');
     }
     

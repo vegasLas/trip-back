@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-
+import { UserRole } from '@prisma/client';
 // User type based on the auth middleware
 export interface AuthUser {
   id: number;
@@ -7,6 +7,8 @@ export interface AuthUser {
   isTourist?: boolean;
   isGuide?: boolean;
   isAdmin?: boolean;
+  isSuperAdmin?: boolean;
+  role: UserRole;
 }
 
 // Common response type

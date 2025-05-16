@@ -7,6 +7,7 @@ import auctionRoutes from './auctionRoutes';
 import bidRoutes from './bidRoutes';
 import paymentRoutes from './paymentRoutes';
 import tariffRoutes from './tariffRoutes';
+import adminRoutes from './adminRoutes';
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.use('/auctions', auctionRoutes);
 router.use('/bids', bidRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/tariffs', tariffRoutes);
+router.use('/admins', adminRoutes);
 
 export default router; 

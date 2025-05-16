@@ -8,6 +8,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User roles enum
+enum UserRole {
+  TOURIST
+  GUIDE
+  ADMIN
+  SUPER_ADMIN
+}
+
 // Base user information shared between tourists and guides
 model BaseUser {
   id            Int       @id @default(autoincrement())
@@ -16,12 +24,14 @@ model BaseUser {
   lastName      String?
   username      String?
   languageCode  String?
+  role          UserRole  @default(TOURIST)  // User role
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // One-to-one relations with specific roles
   tourist       Tourist?
   guide         Guide?
+  admin         Admin?
 }
 
 // Tourist-specific model
@@ -35,6 +45,25 @@ model Tourist {
   directRequests DirectRequest[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// Admin model
+model Admin {
+  id              Int       @id @default(autoincrement())
+  baseUser        BaseUser  @relation(fields: [baseUserId], references: [id])
+  baseUserId      Int       @unique
+  permissions     AdminPermission[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// AdminPermissions enum
+enum AdminPermission {
+  PROGRAM_APPROVAL
+  USER_MANAGEMENT
+  CONTENT_MANAGEMENT
+  PAYMENT_MANAGEMENT
+  SUPER_ADMIN
 }
 
 // Guide-specific model with profile information
@@ -68,8 +97,8 @@ model Program {
   id            Int            @id @default(autoincrement())
   title         String
   description   String
-  guideId       Int
-  guide         Guide          @relation(fields: [guideId], references: [id])
+  guideId       Int?
+  guide         Guide?         @relation(fields: [guideId], references: [id])
   selectedGuides Guide[]       @relation("GuideSelectedPrograms") // Guides who have selected this program
   basePrice     Float          // Base price per person
   durationDays  Int            // Duration in days
@@ -77,7 +106,7 @@ model Program {
   startLocation String
   regions       String[]       // Regions covered in the program
   tags          String[]       // Categories/tags for the program
-  imageUrls     String[]       // Program images
+  images        String[]       // Program images
   isActive      Boolean        @default(true)
   isApproved    Boolean        @default(false)  // Admin approval status
   bookingType   BookingType    @default(BOTH)  // Type of booking allowed
@@ -133,6 +162,8 @@ model PricingTier {
   id              Int      @id @default(autoincrement())
   programId       Int
   program         Program  @relation(fields: [programId], references: [id])
+  title           String   // Title/name for this pricing tier
+  description     String?  // Optional description for this pricing tier
   minPeople       Int      // Minimum number of people for this tier
   maxPeople       Int      // Maximum number of people for this tier
   pricePerPerson  Float    // Price per person for this group size

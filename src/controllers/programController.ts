@@ -4,11 +4,6 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
-  GetProgramsController,
-  GetProgramByIdController,
-  CreateProgramController,
-  UpdateProgramController,
-  DeleteProgramController,
   IdParams,
   ProgramFilterRequest,
   CreateProgramRequest,
@@ -34,7 +29,7 @@ const getTouristIdFromUser = async (userId: number): Promise<number> => {
 };
 
 // Get all programs with filtering
-export const getAllPrograms: GetProgramsController = catchAsync(async (req: ProgramFilterRequest, res: Response) => {
+export const getAllPrograms = catchAsync(async (req: ProgramFilterRequest, res: Response) => {
   const filters = req.query;
   const programs = await programService.getAllPrograms(filters);
   
@@ -46,7 +41,7 @@ export const getAllPrograms: GetProgramsController = catchAsync(async (req: Prog
 });
 
 // Get program by ID
-export const getProgramById: GetProgramByIdController = catchAsync(async (req: IdParams, res: Response) => {
+export const getProgramById = catchAsync(async (req: IdParams, res: Response) => {
   const programId = parseInt(req.params.id);
   
   if (isNaN(programId)) {
@@ -79,7 +74,7 @@ export const getProgramGuides = catchAsync(async (req: Request, res: Response) =
 });
 
 // Create new program
-export const createProgram: CreateProgramController = catchAsync(async (req: CreateProgramRequest, res: Response) => {
+export const createProgram = catchAsync(async (req: CreateProgramRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can create programs');
   }
@@ -96,7 +91,7 @@ export const createProgram: CreateProgramController = catchAsync(async (req: Cre
 });
 
 // Update program
-export const updateProgram: UpdateProgramController = catchAsync(async (req: UpdateProgramRequest, res: Response) => {
+export const updateProgram = catchAsync(async (req: UpdateProgramRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update programs');
   }
@@ -119,7 +114,7 @@ export const updateProgram: UpdateProgramController = catchAsync(async (req: Upd
 });
 
 // Delete program
-export const deleteProgram: DeleteProgramController = catchAsync(async (req: IdParams, res: Response) => {
+export const deleteProgram = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can delete programs');
   }

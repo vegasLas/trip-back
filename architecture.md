@@ -124,7 +124,7 @@ This document outlines the implementation plan for a Telegram Mini App that allo
      startLocation String
      regions       String[]       // Regions covered in the program
      tags          String[]       // Categories/tags for the program
-     imageUrls     String[]       // Program images
+     images     String[]       // Program images
      isActive      Boolean        @default(true)
      isApproved    Boolean        @default(false)  // Admin approval status
      bookingType   BookingType    @default(BOTH)  // Type of booking allowed
