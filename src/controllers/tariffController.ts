@@ -4,10 +4,6 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
-  GetTariffsController,
-  CreateTariffController,
-  UpdateTariffController,
-  DeleteTariffController,
   CreateTariffRequest,
   UpdateTariffRequest,
   IdParams
@@ -31,7 +27,7 @@ interface ProgramParams extends Request {
 }
 
 // Get pricing tiers for a program
-export const getProgramTariffs: GetTariffsController = catchAsync(async (req: ProgramParams, res: Response) => {
+export const getProgramTariffs = catchAsync(async (req: ProgramParams, res: Response) => {
   const programId = parseInt(req.params.programId);
   
   if (isNaN(programId)) {
@@ -48,7 +44,7 @@ export const getProgramTariffs: GetTariffsController = catchAsync(async (req: Pr
 });
 
 // Create new pricing tier for a program
-export const createProgramTariff: CreateTariffController = catchAsync(async (req: CreateTariffRequest & ProgramParams, res: Response) => {
+export const createProgramTariff = catchAsync(async (req: CreateTariffRequest & ProgramParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can create pricing tiers');
   }
@@ -71,7 +67,7 @@ export const createProgramTariff: CreateTariffController = catchAsync(async (req
 });
 
 // Update a pricing tier
-export const updateProgramTariff: UpdateTariffController = catchAsync(async (req: UpdateTariffRequest, res: Response) => {
+export const updateProgramTariff = catchAsync(async (req: UpdateTariffRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update pricing tiers');
   }
@@ -94,7 +90,7 @@ export const updateProgramTariff: UpdateTariffController = catchAsync(async (req
 });
 
 // Delete a pricing tier
-export const deleteProgramTariff: DeleteTariffController = catchAsync(async (req: IdParams, res: Response) => {
+export const deleteProgramTariff = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can delete pricing tiers');
   }
@@ -114,7 +110,7 @@ export const deleteProgramTariff: DeleteTariffController = catchAsync(async (req
 });
 
 // Toggle tariff active status
-export const toggleTariffStatus: UpdateTariffController = catchAsync(async (req: UpdateTariffRequest, res: Response) => {
+export const toggleTariffStatus = catchAsync(async (req: UpdateTariffRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update pricing tiers');
   }

@@ -1,4 +1,4 @@
-import { BaseUser, Guide, Tourist } from '@prisma/client';
+import { BaseUser, Guide, Tourist, Admin, AdminPermission } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
 import { AuthUser, ControllerFunction, IdParams, ApiResponse } from './common';
 
@@ -10,7 +10,7 @@ export interface CreateUserRequest extends Request {
     lastName?: string;
     username?: string;
     languageCode?: string;
-    role: 'tourist' | 'guide' | 'both';
+    role: 'tourist' | 'guide' | 'both' | 'admin';
   };
 }
 
@@ -43,6 +43,27 @@ export interface UpdateGuideRequest extends Request {
   user: AuthUser;
 }
 
+export interface CreateAdminRequest extends Request {
+  body: {
+    telegramId: string;
+    firstName: string;
+    lastName?: string;
+    username?: string;
+    permissions: AdminPermission[];
+  };
+  user: AuthUser;
+}
+
+export interface UpdateAdminRequest extends Request {
+  body: {
+    permissions?: AdminPermission[];
+  };
+  params: {
+    id: string;
+  };
+  user: AuthUser;
+}
+
 export interface UserQueryParams extends Request {
   query: {
     role?: string;
@@ -55,7 +76,7 @@ export interface UserQueryParams extends Request {
 }
 
 // Response Types
-export interface UserResponse extends ApiResponse<BaseUser | (BaseUser & { tourist?: Tourist; guide?: Guide })> {}
+export interface UserResponse extends ApiResponse<BaseUser | (BaseUser & { tourist?: Tourist; guide?: Guide; admin?: Admin })> {}
 
 // Service Types
 export interface UserData {
@@ -76,6 +97,10 @@ export interface GuideData {
   isActive?: boolean;
 }
 
+export interface AdminData {
+  permissions: AdminPermission[];
+}
+
 // Controller Types
 export type GetUsersController = ControllerFunction;
 export type GetUserByIdController = (req: IdParams, res: Response, next: NextFunction) => Promise<void> | void;
@@ -85,4 +110,7 @@ export type DeleteUserController = (req: IdParams, res: Response, next: NextFunc
 export type GetProfileController = ControllerFunction;
 export type UpdateGuideProfileController = (req: UpdateGuideRequest, res: Response, next: NextFunction) => Promise<void> | void;
 export type GetGuidesController = ControllerFunction;
-export type GetTouristsController = ControllerFunction; 
+export type GetTouristsController = ControllerFunction;
+export type GetAdminsController = ControllerFunction;
+export type CreateAdminController = (req: CreateAdminRequest, res: Response, next: NextFunction) => Promise<void> | void;
+export type UpdateAdminController = (req: UpdateAdminRequest, res: Response, next: NextFunction) => Promise<void> | void; 

@@ -245,7 +245,7 @@ export const createProgram = async (guideId: number, programData: any) => {
         startLocation,
         regions: regions || [],
         tags: tags || [],
-        imageUrls: programData.imageUrls || [],
+        images: programData.images || [],
         isActive: true,
         isApproved: false, // Requires admin approval
         bookingType: programData.bookingType || 'BOTH',
@@ -263,6 +263,8 @@ export const createProgram = async (guideId: number, programData: any) => {
         await tx.pricingTier.create({
           data: {
             programId: newProgram.id,
+            title: tier.title || `${tier.minPeople}-${tier.maxPeople} people`,
+            description: tier.description,
             minPeople: parseInt(tier.minPeople),
             maxPeople: parseInt(tier.maxPeople),
             pricePerPerson: parseFloat(tier.pricePerPerson),
@@ -325,6 +327,122 @@ export const createProgram = async (guideId: number, programData: any) => {
   return program;
 };
 
+export const createProgramByAdmin = async (programData: any) => {
+  // Validate required fields
+  const { 
+    title, 
+    description, 
+    basePrice, 
+    durationDays, 
+    maxGroupSize, 
+    startLocation, 
+    regions, 
+    tags, 
+    days 
+  } = programData;
+  
+  if (!title || !description || !basePrice || !durationDays || !maxGroupSize || !startLocation) {
+    throw new BadRequestError('Missing required program fields');
+  }
+  
+  if (!regions || !Array.isArray(regions) || regions.length === 0) {
+    throw new BadRequestError('At least one region must be specified');
+  }
+  
+  if (!days || !Array.isArray(days) || days.length === 0) {
+    throw new BadRequestError('Program must have at least one day');
+  }
+  
+  // Create program with days and points
+  const program = await prisma.$transaction(async (tx) => {
+    // Create the program
+    const newProgram = await tx.program.create({
+      data: {
+        title,
+        description,
+        basePrice: parseFloat(basePrice),
+        durationDays: parseInt(durationDays),
+        maxGroupSize: parseInt(maxGroupSize),
+        startLocation,
+        regions: regions || [],
+        tags: tags || [],
+        images: programData.images || [],
+        isActive: true,
+        isApproved: true, // Admin-created programs are automatically approved
+        bookingType: programData.bookingType || 'BOTH',
+        // No guideId needed as it's optional now
+      }
+    });
+    
+    // Create pricing tiers if provided
+    if (programData.pricingTiers && Array.isArray(programData.pricingTiers)) {
+      for (const tier of programData.pricingTiers) {
+        await tx.pricingTier.create({
+          data: {
+            programId: newProgram.id,
+            title: tier.title || `${tier.minPeople}-${tier.maxPeople} people`,
+            description: tier.description,
+            minPeople: parseInt(tier.minPeople),
+            maxPeople: parseInt(tier.maxPeople),
+            pricePerPerson: parseFloat(tier.pricePerPerson),
+            isActive: true
+          }
+        });
+      }
+    }
+    
+    // Create days and points
+    for (let i = 0; i < days.length; i++) {
+      const day = days[i];
+      const newDay = await tx.programDay.create({
+        data: {
+          programId: newProgram.id,
+          dayNumber: i + 1,
+          title: day.title,
+          description: day.description
+        }
+      });
+      
+      // Create points for this day
+      if (day.points && Array.isArray(day.points)) {
+        for (let j = 0; j < day.points.length; j++) {
+          const point = day.points[j];
+          await tx.programPoint.create({
+            data: {
+              programDayId: newDay.id,
+              title: point.title,
+              description: point.description,
+              pointType: point.pointType || 'ACTIVITY',
+              order: j + 1,
+              duration: point.duration ? parseInt(point.duration) : null,
+              location: point.location,
+              imageUrl: point.imageUrl
+            }
+          });
+        }
+      }
+    }
+    
+    // Return the created program with all relations
+    return tx.program.findUnique({
+      where: { id: newProgram.id },
+      include: {
+        days: {
+          include: {
+            points: true
+          },
+          orderBy: {
+            dayNumber: 'asc'
+          }
+        },
+        pricingTiers: true
+      }
+    });
+  });
+  
+  return program;
+};
+
 export const updateProgram = async (programId: number, guideId: number, updateData: any) => {
   // Check if program exists and guide is the owner
   const program = await prisma.program.findUnique({
@@ -336,7 +454,7 @@ export const updateProgram = async (programId: number, guideId: number, updateDa
     throw new NotFoundError('Program not found');
   }
   
-  if (program.guideId !== guideId) {
+  if (program.guideId !== null && program.guideId !== guideId) {
     throw new ForbiddenError('You are not authorized to update this program');
   }
   
@@ -350,7 +468,7 @@ export const updateProgram = async (programId: number, guideId: number, updateDa
     startLocation, 
     regions, 
     tags, 
-    imageUrls,
+    images,
     isActive,
     bookingType
   } = updateData;
@@ -365,7 +483,7 @@ export const updateProgram = async (programId: number, guideId: number, updateDa
   if (startLocation !== undefined) updateObj.startLocation = startLocation;
   if (regions !== undefined) updateObj.regions = regions;
   if (tags !== undefined) updateObj.tags = tags;
-  if (imageUrls !== undefined) updateObj.imageUrls = imageUrls;
+  if (images !== undefined) updateObj.images = images;
   if (isActive !== undefined) updateObj.isActive = isActive;
   if (bookingType !== undefined) updateObj.bookingType = bookingType;
   
@@ -400,7 +518,7 @@ export const deleteProgram = async (programId: number, guideId: number) => {
     throw new NotFoundError('Program not found');
   }
   
-  if (program.guideId !== guideId) {
+  if (program.guideId !== null && program.guideId !== guideId) {
     throw new ForbiddenError('You are not authorized to delete this program');
   }
   

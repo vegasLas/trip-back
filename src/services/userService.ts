@@ -1,5 +1,7 @@
 import prisma from './prismaService';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../utils/errors';
+import { AdminData, UserData } from '../types';
+import { AdminPermission } from '@prisma/client';
 
 export const getUserProfile = async (userId: number) => {
   const baseUser = await prisma.baseUser.findUnique({
@@ -16,11 +18,12 @@ export const getUserProfile = async (userId: number) => {
               description: true,
               basePrice: true,
               durationDays: true,
-              imageUrls: true,
+              images: true,
             }
           }
         }
-      }
+      },
+      admin: true
     }
   });
 
@@ -56,7 +59,7 @@ export const getPublicUserProfile = async (userId: number) => {
               description: true,
               basePrice: true,
               durationDays: true,
-              imageUrls: true,
+              images: true,
             }
           }
         }
@@ -69,6 +72,148 @@ export const getPublicUserProfile = async (userId: number) => {
   }
 
   return baseUser;
+};
+
+// Admin-related functions
+
+export const getAllAdmins = async () => {
+  const admins = await prisma.baseUser.findMany({
+    where: {
+      admin: {
+        isNot: null
+      }
+    },
+    include: {
+      admin: true
+    }
+  });
+
+  return admins;
+};
+
+export const getAdminById = async (adminId: number) => {
+  const admin = await prisma.baseUser.findFirst({
+    where: {
+      id: adminId,
+      admin: {
+        isNot: null
+      }
+    },
+    include: {
+      admin: true
+    }
+  });
+
+  if (!admin) {
+    throw new NotFoundError('Admin not found');
+  }
+
+  return admin;
+};
+
+export const createAdmin = async (data: UserData & AdminData) => {
+  const { telegramId, firstName, lastName, username, permissions } = data;
+
+  // Check if user with telegramId already exists
+  const existingUser = await prisma.baseUser.findUnique({
+    where: { telegramId },
+    include: {
+      admin: true
+    }
+  });
+
+  if (existingUser) {
+    if (existingUser.admin) {
+      throw new BadRequestError('User is already an admin');
+    }
+
+    // User exists but is not an admin, add admin role
+    const admin = await prisma.admin.create({
+      data: {
+        baseUser: { connect: { id: existingUser.id } },
+        permissions: permissions
+      },
+      include: {
+        baseUser: true
+      }
+    });
+
+    return admin;
+  }
+
+  // Create new user with admin role
+  const newAdmin = await prisma.baseUser.create({
+    data: {
+      telegramId,
+      firstName,
+      lastName: lastName || null,
+      username: username || null,
+      admin: {
+        create: {
+          permissions: permissions
+        }
+      }
+    },
+    include: {
+      admin: true
+    }
+  });
+
+  return newAdmin;
+};
+
+export const updateAdminPermissions = async (adminId: number, permissions: AdminPermission[]) => {
+  // Check if admin exists
+  const admin = await prisma.admin.findFirst({
+    where: {
+      baseUser: {
+        id: adminId
+      }
+    }
+  });
+
+  if (!admin) {
+    throw new NotFoundError('Admin not found');
+  }
+
+  // Update admin permissions
+  const updatedAdmin = await prisma.admin.update({
+    where: {
+      id: admin.id
+    },
+    data: {
+      permissions: permissions
+    },
+    include: {
+      baseUser: true
+    }
+  });
+
+  return updatedAdmin;
+};
+
+export const deleteAdmin = async (adminId: number) => {
+  // Find the admin
+  const admin = await prisma.admin.findFirst({
+    where: {
+      baseUser: {
+        id: adminId
+      }
+    }
+  });
+
+  if (!admin) {
+    throw new NotFoundError('Admin not found');
+  }
+
+  // Delete admin record (but keep the base user)
+  await prisma.admin.delete({
+    where: {
+      id: admin.id
+    }
+  });
+
+  return true;
 };
 
 export const updateUserProfile = async (userId: number, data: any) => {
@@ -96,7 +241,8 @@ export const updateUserProfile = async (userId: number, data: any) => {
         data: baseUserUpdate,
         include: {
           tourist: true,
-          guide: true
+          guide: true,
+          admin: true
         }
       });
     } else {
@@ -104,7 +250,8 @@ export const updateUserProfile = async (userId: number, data: any) => {
         where: { id: userId },
         include: {
           tourist: true,
-          guide: true
+          guide: true,
+          admin: true
         }
       });
     }
@@ -133,6 +280,18 @@ export const updateUserProfile = async (userId: number, data: any) => {
       }
     }
 
+    // Update admin-specific data if user is an admin
+    if (updatedBaseUser.admin && roleSpecificData.admin) {
+      const { permissions } = roleSpecificData.admin;
+      
+      if (permissions !== undefined) {
+        await tx.admin.update({
+          where: { id: updatedBaseUser.admin.id },
+          data: { permissions }
+        });
+      }
+    }
+
     // Return the updated user
     return tx.baseUser.findUnique({
       where: { id: userId },
@@ -143,7 +302,8 @@ export const updateUserProfile = async (userId: number, data: any) => {
             receivedReviews: true,
             selectedPrograms: true
           }
-        }
+        },
+        admin: true
       }
     });
   });

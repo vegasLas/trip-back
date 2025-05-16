@@ -3,10 +3,6 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ValidationError } from '../utils/errors';
 import {
-  GetProfileController,
-  GetUserByIdController,
-  UpdateUserController,
-  UpdateGuideProfileController,
   IdParams,
   UpdateUserRequest,
   UpdateGuideRequest
@@ -21,17 +17,9 @@ const getGuideIdFromUser = async (userId: number): Promise<number> => {
   return user.guide.id;
 };
 
-// Helper function to get tourist ID from user ID
-const getTouristIdFromUser = async (userId: number): Promise<number> => {
-  const user = await userService.getUserProfile(userId);
-  if (!user.tourist) {
-    throw new BadRequestError('User is not a tourist');
-  }
-  return user.tourist.id;
-};
 
 // Get current user profile
-export const getCurrentUser: GetProfileController = catchAsync(async (req: Request, res: Response) => {
+export const getCurrentUser = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
     throw new BadRequestError('User not authenticated');
   }
@@ -45,7 +33,7 @@ export const getCurrentUser: GetProfileController = catchAsync(async (req: Reque
 });
 
 // Get public user profile
-export const getUser: GetUserByIdController = catchAsync(async (req: IdParams, res: Response) => {
+export const getUser = catchAsync(async (req: IdParams, res: Response) => {
   const userId = parseInt(req.params.id);
   
   if (isNaN(userId)) {
@@ -61,7 +49,7 @@ export const getUser: GetUserByIdController = catchAsync(async (req: IdParams, r
 });
 
 // Update user profile
-export const updateUser: UpdateUserController = catchAsync(async (req: UpdateUserRequest, res: Response) => {
+export const updateUser = catchAsync(async (req: UpdateUserRequest, res: Response) => {
   if (!req.user) {
     throw new BadRequestError('User not authenticated');
   }
@@ -75,7 +63,7 @@ export const updateUser: UpdateUserController = catchAsync(async (req: UpdateUse
 });
 
 // Register as a guide
-export const registerAsGuide: UpdateGuideProfileController = catchAsync(async (req: UpdateGuideRequest, res: Response) => {
+export const registerAsGuide = catchAsync(async (req: UpdateGuideRequest, res: Response) => {
   if (!req.user) {
     throw new BadRequestError('User not authenticated');
   }
@@ -105,7 +93,7 @@ export const registerAsGuide: UpdateGuideProfileController = catchAsync(async (r
 });
 
 // Update guide's active status
-export const updateGuideStatus: UpdateGuideProfileController = catchAsync(async (req: UpdateGuideRequest, res: Response) => {
+export const updateGuideStatus = catchAsync(async (req: UpdateGuideRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new BadRequestError('User is not a guide');
   }

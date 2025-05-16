@@ -14,7 +14,7 @@ export interface CreateProgramRequest extends Request {
     startLocation: string;
     regions?: string[];
     tags?: string[];
-    imageUrls?: string[];
+    images?: string[];
     bookingType?: BookingType;
     isActive?: boolean;
   };
@@ -31,7 +31,7 @@ export interface UpdateProgramRequest extends Request {
     startLocation?: string;
     regions?: string[];
     tags?: string[];
-    imageUrls?: string[];
+    images?: string[];
     bookingType?: BookingType;
     isActive?: boolean;
     isApproved?: boolean;
@@ -75,7 +75,7 @@ export interface ProgramData {
   startLocation: string;
   regions?: string[];
   tags?: string[];
-  imageUrls?: string[];
+  images?: string[];
   bookingType?: BookingType;
   isActive?: boolean;
   isApproved?: boolean;

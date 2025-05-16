@@ -4,12 +4,6 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
-  CreatePaymentController,
-  GetPaymentByIdController,
-  ProcessPaymentController,
-  GetGuidePaymentsController,
-  GetTokenTransactionsController,
-  CreateTokenTransactionController,
   IdParams,
   CreatePaymentRequest,
   CreateTokenTransactionRequest
@@ -25,7 +19,7 @@ const getGuideIdFromUser = async (userId: number): Promise<number> => {
 };
 
 // Initiate a token purchase for a guide
-export const initiatePayment: CreatePaymentController = catchAsync(async (req: CreatePaymentRequest, res: Response) => {
+export const initiatePayment = catchAsync(async (req: CreatePaymentRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can purchase tokens');
   }
@@ -42,7 +36,7 @@ export const initiatePayment: CreatePaymentController = catchAsync(async (req: C
 });
 
 // Get payment details
-export const getPaymentDetails: GetPaymentByIdController = catchAsync(async (req: IdParams, res: Response) => {
+export const getPaymentDetails = catchAsync(async (req: IdParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -56,7 +50,6 @@ export const getPaymentDetails: GetPaymentByIdController = catchAsync(async (req
   const payment = await paymentService.getPaymentDetails(
     paymentId,
     req.user.id,
-    false, // isTourist
     req.user.isGuide
   );
   
@@ -67,7 +60,7 @@ export const getPaymentDetails: GetPaymentByIdController = catchAsync(async (req
 });
 
 // Handle payment callback from payment provider
-export const handlePaymentCallback: ProcessPaymentController = catchAsync(async (req: IdParams, res: Response) => {
+export const handlePaymentCallback = catchAsync(async (req: IdParams, res: Response) => {
   const paymentId = parseInt(req.params.id);
   
   if (isNaN(paymentId)) {
@@ -82,13 +75,9 @@ export const handlePaymentCallback: ProcessPaymentController = catchAsync(async 
   });
 });
 
-// This endpoint is no longer relevant with the token system
-export const getTouristPaymentHistory = catchAsync(async (req: Request, res: Response) => {
-  throw new BadRequestError('Operation not supported in token system');
-});
 
 // Get guide's token purchase history and current balance
-export const getGuidePaymentsReceived: GetGuidePaymentsController = catchAsync(async (req: Request, res: Response) => {
+export const getGuidePaymentsReceived = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -105,7 +94,7 @@ export const getGuidePaymentsReceived: GetGuidePaymentsController = catchAsync(a
 });
 
 // Use tokens for a service/feature
-export const useTokens: CreateTokenTransactionController = catchAsync(async (req: CreateTokenTransactionRequest, res: Response) => {
+export const useTokens = catchAsync(async (req: CreateTokenTransactionRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can use tokens');
   }
@@ -139,7 +128,7 @@ export const getTokenBalance = catchAsync(async (req: Request, res: Response) =>
 });
 
 // Get guide's token transaction history
-export const getTokenTransactions: GetTokenTransactionsController = catchAsync(async (req: Request, res: Response) => {
+export const getTokenTransactions = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -155,12 +144,3 @@ export const getTokenTransactions: GetTokenTransactionsController = catchAsync(a
     data: transactions
   });
 });
-
-// These endpoints are no longer relevant with the token system
-export const initiateWithdrawal = catchAsync(async (req: Request, res: Response) => {
-  throw new BadRequestError('Withdrawals are not supported in token system');
-});
-
-export const getWithdrawalStatus = catchAsync(async (req: Request, res: Response) => {
-  throw new BadRequestError('Withdrawals are not supported in token system');
-}); 

@@ -4,12 +4,7 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
-  GetProgramPointsController,
-  CreateProgramPointController,
-  UpdateProgramPointController,
-  DeleteProgramPointController,
-  CreateProgramPointRequest,
-  UpdateProgramPointRequest
+  CreateProgramPointRequest
 } from '../types';
 
 // Helper function to get guide ID from user ID
@@ -33,7 +28,7 @@ interface ProgramPointParams extends Request {
 }
 
 // Get all points for a day
-export const getProgramPoints: GetProgramPointsController = catchAsync(async (req: ProgramPointParams, res: Response) => {
+export const getProgramPoints = catchAsync(async (req: ProgramPointParams, res: Response) => {
   const programId = parseInt(req.params.programId);
   const dayId = parseInt(req.params.dayId);
   
@@ -51,7 +46,7 @@ export const getProgramPoints: GetProgramPointsController = catchAsync(async (re
 });
 
 // Add new point to a day
-export const createProgramPoint: CreateProgramPointController = catchAsync(async (req: CreateProgramPointRequest & ProgramPointParams, res: Response) => {
+export const createProgramPoint = catchAsync(async (req: CreateProgramPointRequest & ProgramPointParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can add points to program days');
   }
@@ -75,7 +70,7 @@ export const createProgramPoint: CreateProgramPointController = catchAsync(async
 });
 
 // Update a point
-export const updateProgramPoint: UpdateProgramPointController = catchAsync(async (req: UpdateProgramPointRequest & ProgramPointParams, res: Response) => {
+export const updateProgramPoint = catchAsync(async (req: any, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update program points');
   }
@@ -106,7 +101,7 @@ export const updateProgramPoint: UpdateProgramPointController = catchAsync(async
 });
 
 // Delete a point
-export const deleteProgramPoint: DeleteProgramPointController = catchAsync(async (req: ProgramPointParams, res: Response) => {
+export const deleteProgramPoint = catchAsync(async (req: ProgramPointParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can delete program points');
   }

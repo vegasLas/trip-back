@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { ForbiddenError } from '../utils/errors';
 import { validate, parse, type InitData } from '@telegram-apps/init-data-node';
 
@@ -13,9 +13,11 @@ declare global {
       user?: {
         id: number;
         telegramId: string;
+        role: UserRole;
         isTourist?: boolean;
         isGuide?: boolean;
         isAdmin?: boolean;
+        isSuperAdmin?: boolean;
       };
       initData?: InitData;
     }
@@ -24,7 +26,7 @@ declare global {
 
 /**
  * Middleware that validates Telegram init data and loads user information
- * This handles both "TelegramWebApp" and "tma" authorization formats
+ * This handles the "tma" authorization format
  */
 export const validateTelegramAuth = async (
   req: Request,
@@ -53,7 +55,7 @@ export const validateTelegramAuth = async (
     }
     else {
       res.status(401).json({ 
-        message: 'Unauthorized: Invalid authorization header format. Expected "TelegramWebApp <initData>" or "tma <initData>".' 
+        message: 'Unauthorized: Invalid authorization header format. Expected "tma <initData>".' 
       });
       return;
     }
@@ -95,6 +97,7 @@ export const validateTelegramAuth = async (
         include: {
           tourist: true,
           guide: true,
+          admin: true
         }
       });
       
@@ -103,17 +106,15 @@ export const validateTelegramAuth = async (
         return;
       }
       
-      // Check if user is an admin
-      const adminTelegramIds = process.env.ADMIN_TELEGRAM_IDS?.split(',') || [];
-      const isAdmin = adminTelegramIds.includes(telegramId);
-      
-      // Set user in request
+      // Set user in request with role-based flags
       req.user = {
         id: baseUser.id,
         telegramId: baseUser.telegramId,
-        isTourist: !!baseUser.guide === false,
-        isGuide: !!baseUser.guide,
-        isAdmin: isAdmin,
+        role: baseUser.role,
+        isTourist: baseUser.role === UserRole.TOURIST,
+        isGuide: baseUser.role === UserRole.GUIDE,
+        isAdmin: baseUser.role === UserRole.ADMIN || baseUser.role === UserRole.SUPER_ADMIN,
+        isSuperAdmin: baseUser.role === UserRole.SUPER_ADMIN
       };
       
       next();
@@ -133,10 +134,10 @@ export const validateTelegramAuth = async (
 // Middleware to require tourist role
 export const requireTourist = (
   req: Request,
-  res: Response,
+  _: Response,
   next: NextFunction
 ): void => {
-  if (!req.user || !req.user.isTourist) {
+  if (!req.user || req.user.role !== UserRole.TOURIST) {
     next(new ForbiddenError('Tourist access required'));
     return;
   }
@@ -146,10 +147,10 @@ export const requireTourist = (
 // Middleware to require guide role
 export const requireGuide = (
   req: Request,
-  res: Response,
+  _: Response,
   next: NextFunction
 ): void => {
-  if (!req.user || !req.user.isGuide) {
+  if (!req.user || req.user.role !== UserRole.GUIDE) {
     next(new ForbiddenError('Guide access required'));
     return;
   }
@@ -159,11 +160,24 @@ export const requireGuide = (
 // Middleware to require admin role
 export const requireAdmin = (
   req: Request,
-  res: Response,
+  _: Response,
   next: NextFunction
 ): void => {
-  if (!req.user || !req.user.isAdmin) {
+  if (!req.user || !(req.user.role === UserRole.ADMIN || req.user.role === UserRole.SUPER_ADMIN)) {
     next(new ForbiddenError('Admin access required'));
+    return;
+  }
+  next();
+};
+
+// Middleware to require super admin role
+export const requireSuperAdmin = (
+  req: Request,
+  _: Response,
+  next: NextFunction
+): void => {
+  if (!req.user || req.user.role !== UserRole.SUPER_ADMIN) {
+    next(new ForbiddenError('Super admin access required'));
     return;
   }
   next();

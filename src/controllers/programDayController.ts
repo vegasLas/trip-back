@@ -4,11 +4,7 @@ import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ForbiddenError } from '../utils/errors';
 import {
-  GetProgramDaysController,
   GetProgramDayByIdController,
-  CreateProgramDayController,
-  UpdateProgramDayController,
-  DeleteProgramDayController,
   CreateProgramDayRequest,
   UpdateProgramDayRequest,
 } from '../types';
@@ -32,7 +28,7 @@ interface ProgramDayParams extends Request {
 }
 
 // Get all days for a program
-export const getProgramDays: GetProgramDaysController = catchAsync(async (req: Request, res: Response) => {
+export const getProgramDays = catchAsync(async (req: Request, res: Response) => {
   const programId = parseInt(req.params.programId);
   
   if (isNaN(programId)) {
@@ -66,7 +62,7 @@ export const getProgramDayById: GetProgramDayByIdController = catchAsync(async (
 });
 
 // Add new day to program
-export const createProgramDay: CreateProgramDayController = catchAsync(async (req: CreateProgramDayRequest, res: Response) => {
+export const createProgramDay = catchAsync(async (req: CreateProgramDayRequest, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can add days to programs');
   }
@@ -89,7 +85,7 @@ export const createProgramDay: CreateProgramDayController = catchAsync(async (re
 });
 
 // Update day
-export const updateProgramDay: UpdateProgramDayController = catchAsync(async (req: UpdateProgramDayRequest & ProgramDayParams, res: Response) => {
+export const updateProgramDay = catchAsync(async (req: UpdateProgramDayRequest & ProgramDayParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can update program days');
   }
@@ -113,7 +109,7 @@ export const updateProgramDay: UpdateProgramDayController = catchAsync(async (re
 });
 
 // Delete day
-export const deleteProgramDay: DeleteProgramDayController = catchAsync(async (req: ProgramDayParams, res: Response) => {
+export const deleteProgramDay = catchAsync(async (req: ProgramDayParams, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Only guides can delete program days');
   }
