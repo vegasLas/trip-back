@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import * as programPointController from '../controllers/programPointController';
-import { validateTelegramAuth, requireGuide } from '../middlewares/auth';
+import { validateTelegramAuth, requireAdmin } from '../middlewares/auth';
 
 const router = Router({ mergeParams: true });
 
 // Public routes
 router.get('/', programPointController.getProgramPoints);
 
-// Protected routes
-router.post('/', validateTelegramAuth, requireGuide, programPointController.createProgramPoint);
-router.put('/:pointId', validateTelegramAuth, requireGuide, programPointController.updateProgramPoint);
-router.delete('/:pointId', validateTelegramAuth, requireGuide, programPointController.deleteProgramPoint);
+// Admin routes
+router.use(validateTelegramAuth, requireAdmin);
+router.post('/', programPointController.createProgramPoint);
+router.put('/:pointId', programPointController.updateProgramPoint);
+router.delete('/:pointId', programPointController.deleteProgramPoint);
 
 export default router; 

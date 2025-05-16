@@ -167,7 +167,7 @@ export const updateRecommendationStatus = async (req: Request, res: Response) =>
 /**
  * Get all program recommendations
  */
-export const getAllRecommendations = async (req: Request, res: Response) => {
+export const getAllRecommendations = async (_: Request, res: Response) => {
   try {
     const recommendations = await programService.getAllProgramRecommendations();
     
