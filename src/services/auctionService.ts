@@ -1,5 +1,5 @@
 import prisma from './prismaService';
-import { NotFoundError, BadRequestError, ForbiddenError } from '../utils/errors';
+import { NotFoundError, BadRequestError } from '../utils/errors';
 
 export const getActiveAuctions = async () => {
   // Get all active auctions that haven't ended yet

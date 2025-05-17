@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as userController from '../controllers/userController';
 import { validateTelegramAuth, requireGuide } from '../middlewares/auth';
+import { uploadGuideImage } from '../middlewares/uploadMiddleware';
 
 const router = Router();
 
@@ -27,5 +28,14 @@ router.put('/guides/me/programs', requireGuide, userController.updateGuideProgra
 
 // GET /api/guides/me/programs - Get guide's selected programs (guide only)
 router.get('/guides/me/programs', requireGuide, userController.getGuidePrograms);
+
+// POST /api/guides/me/images - Add image to guide profile (guide only)
+router.post('/guides/me/images', requireGuide, uploadGuideImage, userController.addGuideImage);
+
+// PUT /api/guides/me/images/order - Update guide images order (guide only)
+router.put('/guides/me/images/order', requireGuide, userController.updateGuideImagesOrder);
+
+// DELETE /api/guides/me/images/:imageIndex - Remove image from guide profile (guide only)
+router.delete('/guides/me/images/:imageIndex', requireGuide, userController.removeGuideImage);
 
 export default router; 

@@ -2,6 +2,7 @@ import prisma from './prismaService';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../utils/errors';
 import { AdminData, UserData } from '../types';
 import { AdminPermission } from '@prisma/client';
+import * as notificationService from './notificationService';
 
 export const getUserProfile = async (userId: number) => {
   const baseUser = await prisma.baseUser.findUnique({
@@ -48,7 +49,6 @@ export const getPublicUserProfile = async (userId: number) => {
           bio: true,
           languages: true,
           specialties: true,
-          avatarUrl: true,
           rating: true,
           isActive: true,
           programs: {
@@ -262,7 +262,7 @@ export const updateUserProfile = async (userId: number, data: any) => {
 
     // Update guide-specific data if user is a guide
     if (updatedBaseUser.guide && roleSpecificData.guide) {
-      const { bio, languages, specialties, phoneNumber, email, avatarUrl } = roleSpecificData.guide;
+      const { bio, languages, specialties, phoneNumber, email } = roleSpecificData.guide;
       
       const guideUpdate: any = {};
       if (bio !== undefined) guideUpdate.bio = bio;
@@ -270,7 +270,6 @@ export const updateUserProfile = async (userId: number, data: any) => {
       if (specialties !== undefined) guideUpdate.specialties = specialties;
       if (phoneNumber !== undefined) guideUpdate.phoneNumber = phoneNumber;
       if (email !== undefined) guideUpdate.email = email;
-      if (avatarUrl !== undefined) guideUpdate.avatarUrl = avatarUrl;
       
       if (Object.keys(guideUpdate).length > 0) {
         await tx.guide.update({
@@ -329,23 +328,28 @@ export const registerAsGuide = async (userId: number, guideData: any) => {
     throw new BadRequestError('User is already registered as a guide');
   }
 
-  // Create guide profile
-  const { bio, languages, specialties, phoneNumber, email, avatarUrl } = guideData;
-  
-  const guide = await prisma.guide.create({
-    data: {
-      baseUser: { connect: { id: userId } },
-      bio: bio || null,
-      languages: languages || [],
-      specialties: specialties || [],
-      phoneNumber: phoneNumber || null,
-      email: email || null,
-      avatarUrl: avatarUrl || null,
-      isActive: true
-    }
+  // Begin transaction to create guide profile
+  const result = await prisma.$transaction(async (tx) => {
+    // Create guide profile (role will remain as TOURIST until approved)
+    const { bio, languages, specialties, phoneNumber, email } = guideData;
+    
+    const guide = await tx.guide.create({
+      data: {
+        baseUser: { connect: { id: userId } },
+        bio: bio || null,
+        languages: languages || [],
+        specialties: specialties || [],
+        phoneNumber: phoneNumber || null,
+        email: email || null,
+        isActive: true,
+        isApproved: false
+      }
+    });
+
+    return guide;
   });
 
-  return guide;
+  return result;
 };
 
 export const updateGuideStatus = async (guideId: number, isActive: boolean) => {
@@ -416,4 +420,162 @@ export const getGuidePrograms = async (guideId: number) => {
   }
 
   return guide.selectedPrograms;
+};
+
+// Add image to guide profile
+export const addGuideImage = async (guideId: number, imageUrl: string) => {
+  // Validate inputs
+  if (!imageUrl) {
+    throw new BadRequestError('Image URL is required');
+  }
+
+  // Get guide
+  const guide = await prisma.guide.findUnique({
+    where: { id: guideId },
+    select: { images: true }
+  });
+
+  if (!guide) {
+    throw new NotFoundError('Guide not found');
+  }
+
+  // Add new image to the images array
+  const updatedGuide = await prisma.guide.update({
+    where: { id: guideId },
+    data: {
+      images: {
+        push: imageUrl
+      }
+    }
+  });
+
+  return updatedGuide;
+};
+
+// Remove image from guide profile
+export const removeGuideImage = async (guideId: number, imageIndex: number) => {
+  // Get guide with images
+  const guide = await prisma.guide.findUnique({
+    where: { id: guideId },
+    select: { images: true }
+  });
+
+  if (!guide) {
+    throw new NotFoundError('Guide not found');
+  }
+
+  // Validate image index
+  if (imageIndex < 0 || imageIndex >= guide.images.length) {
+    throw new BadRequestError('Invalid image index');
+  }
+
+  // Remove the image at the specified index
+  const updatedImages = [...guide.images];
+  updatedImages.splice(imageIndex, 1);
+
+  // Update guide profile
+  const updatedGuide = await prisma.guide.update({
+    where: { id: guideId },
+    data: {
+      images: updatedImages
+    }
+  });
+
+  return updatedGuide;
+};
+
+// Update order of guide images
+export const updateGuideImagesOrder = async (guideId: number, newOrder: string[]) => {
+  // Get guide with images
+  const guide = await prisma.guide.findUnique({
+    where: { id: guideId },
+    select: { images: true }
+  });
+
+  if (!guide) {
+    throw new NotFoundError('Guide not found');
+  }
+
+  // Validate new order contains all existing images
+  if (newOrder.length !== guide.images.length) {
+    throw new BadRequestError('New order must contain all existing images');
+  }
+
+  // Validate that all images in newOrder are present in the original array
+  const originalImagesSet = new Set(guide.images);
+  for (const image of newOrder) {
+    if (!originalImagesSet.has(image)) {
+      throw new BadRequestError('New order contains images that do not exist in the guide profile');
+    }
+  }
+
+  // Update guide profile with new image order
+  const updatedGuide = await prisma.guide.update({
+    where: { id: guideId },
+    data: {
+      images: newOrder
+    }
+  });
+
+  return updatedGuide;
+};
+
+// Approve or reject a guide
+export const updateGuideApprovalStatus = async (guideId: number, isApproved: boolean) => {
+  // Get guide
+  const guide = await prisma.guide.findUnique({
+    where: { id: guideId },
+    include: {
+      baseUser: true
+    }
+  });
+
+  if (!guide) {
+    throw new NotFoundError('Guide not found');
+  }
+
+  // Use transaction to update both guide and baseUser
+  const result = await prisma.$transaction(async (tx) => {
+    // Update guide approval status
+    const updatedGuide = await tx.guide.update({
+      where: { id: guideId },
+      data: { isApproved }
+    });
+
+    // Update user role based on approval status
+    await tx.baseUser.update({
+      where: { id: guide.baseUserId },
+      data: { 
+        role: isApproved ? 'GUIDE' : 'TOURIST'
+      }
+    });
+
+    return updatedGuide;
+  });
+
+  // Send notification to the guide
+  await notificationService.notifyGuideApproval(guide.baseUserId, isApproved);
+
+  return result;
+};
+
+// Get all pending guide approval requests
+export const getPendingGuideApprovals = async () => {
+  const pendingGuides = await prisma.guide.findMany({
+    where: { 
+      isApproved: false 
+    },
+    include: {
+      baseUser: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          username: true
+        }
+      }
+    }
+  });
+
+  return pendingGuides;
 }; 

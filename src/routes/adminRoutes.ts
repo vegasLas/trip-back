@@ -1,5 +1,6 @@
 import express from 'express';
 import * as adminController from '../controllers/adminController';
+import * as userController from '../controllers/userController';
 import { validateTelegramAuth, requireAdmin } from '../middlewares/auth';
 
 const router = express.Router();
@@ -19,5 +20,9 @@ router.delete('/:id', adminController.deleteAdmin);
 router.post('/programs', adminController.createProgram);
 router.get('/recommendations', adminController.getAllRecommendations);
 router.patch('/recommendations/:recommendationId', adminController.updateRecommendationStatus);
+
+// Guide approval routes
+router.get('/guides/pending', userController.getPendingGuideApprovals);
+router.patch('/guides/:id/approval', userController.updateGuideApprovalStatus);
 
 export default router; 

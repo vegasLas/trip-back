@@ -98,7 +98,6 @@ This document outlines the implementation plan for a Telegram Mini App that allo
      specialties   String[]  // Guide specialties
      phoneNumber   String?
      email         String?
-     avatarUrl     String?
      rating        Float?    // Average rating
      isActive      Boolean   @default(true)  // Guide's availability status
      selectedPrograms Program[] @relation("GuideSelectedPrograms") // Programs the guide has selected to work on

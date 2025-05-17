@@ -8,7 +8,8 @@ const router = Router({ mergeParams: true });
 router.get('/', programPointController.getProgramPoints);
 
 // Admin routes
-router.use(validateTelegramAuth, requireAdmin);
+router.use(validateTelegramAuth);
+router.use(requireAdmin);
 router.post('/', programPointController.createProgramPoint);
 router.put('/:pointId', programPointController.updateProgramPoint);
 router.delete('/:pointId', programPointController.deleteProgramPoint);
