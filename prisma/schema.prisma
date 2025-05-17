@@ -120,6 +120,7 @@ model Program {
   pricingTiers  PricingTier[]  // Different pricing tiers based on group size
   directRequests DirectRequest[] // Requests for direct booking
   recommendations ProgramRecommendation[] // Guide recommendations
+  auctions      Auction[]      // Auctions for this program
 }
 
 // ProgramRecommendation model for guide program recommendations
@@ -247,6 +248,8 @@ model Auction {
   id            Int            @id @default(autoincrement())
   touristId     Int            // Tourist who created the auction
   tourist       Tourist        @relation(fields: [touristId], references: [id])
+  programId     Int?           // Optional link to a program
+  program       Program?       @relation(fields: [programId], references: [id])
   title         String
   description   String
   location      String

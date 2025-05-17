@@ -9,8 +9,8 @@ graph TD
         A4["View Public User Profile (GET /users/:id)"]
     end
 
-    GuideUser(["Guide"])
-    UserWhoWantsToBecomeGuide(["User"])
+    GuideUser([Guide])
+    UserWhoWantsToBecomeGuide([User])
 
     GuideUser --> A1
     GuideUser --> A2
@@ -27,7 +27,7 @@ graph TD
         GP2["Manage Associated Programs<br>(GET/PUT /users/guides/me/programs)"]
     end
 
-    GuideUser(["Guide"])
+    GuideUser([Guide])
 
     GuideUser --> GP1
     GuideUser --> GP2
@@ -45,7 +45,7 @@ graph TD
         P5["Respond to Direct Booking Request<br>(PUT /programs/:id/request/:requestId/respond)"]
     end
 
-    GuideUser(["Guide"])
+    GuideUser([Guide])
 
     GuideUser --> P1
     GuideUser --> P2
@@ -54,46 +54,43 @@ graph TD
     GuideUser --> P5
 ```
 
-## Tab 4: Auction Management
+## Tab 4: Auction Participation (Guide as Bidder)
 
 ```mermaid
 graph TD
-    subgraph "Auction Management"
-        AUC1["View Active Auctions (GET /auctions/active)"]
-        AUC2["View Auction Details (GET /auctions/:id)"]
-        AUC3["Create Auction (POST /auctions/)"]
-        AUC4["Update Own Auction (PUT /auctions/:id)"]
-        AUC5["Delete Own Auction (DELETE /auctions/:id)"]
-        AUC6["End Own Auction (POST /auctions/:id/end)"]
-        AUC7["View Own Auctions (GET /auctions/guide/own)"]
+    subgraph "Auction Participation (Guide as Bidder)"
+        AUC_P1["View Active Auctions (GET /auctions/active)"]
+        AUC_P2["View Auction Details (GET /auctions/:id)"]
+        AUC_P3["Place Bid on Auction<br>(POST /auctions/:id/bids)"]
+        AUC_P4["View Auctions Bidded On<br>(GET /auctions/guide/bidded)"]
     end
 
-    GuideUser(["Guide"])
+    GuideUser([Guide])
 
-    GuideUser --> AUC1
-    GuideUser --> AUC2
-    GuideUser --> AUC3
-    GuideUser --> AUC4
-    GuideUser --> AUC5
-    GuideUser --> AUC6
-    GuideUser --> AUC7
+    GuideUser --> AUC_P1
+    GuideUser --> AUC_P2
+    GuideUser --> AUC_P3
+    GuideUser --> AUC_P4
 ```
 
-## Tab 5: Bid Management (for Guide's Auctions)
+## Tab 5: Bid Management (Guide's Own Bids)
 
 ```mermaid
 graph TD
-    subgraph "Bid Management (for Guide's Auctions)"
+    subgraph "Bid Management (Guide's Own Bids)"
         B1["View Bids for Any Auction (GET /bids/auction/:auctionId)"]
-        B2["View Bids on Own Auction<br>(GET /bids/guide/auction/:auctionId)"]
-        B3["View Highest Bids for Own Auctions<br>(GET /bids/guide/highest)"]
+        B2["Create Bid<br>(POST /bids/) - Requires Guide Role"]
+        B3["Cancel Own Bid<br>(DELETE /bids/:id) - Requires Guide Role"]
+        B4["View Bids on Specific Auction (Guide's view on an auction)<br>(GET /bids/guide/auction/:auctionId)"]
     end
+    Note["Note: Guides now act as bidders and manage their own bids."]
 
-    GuideUser(["Guide"])
+    GuideUser([Guide])
 
     GuideUser --> B1
     GuideUser --> B2
     GuideUser --> B3
+    GuideUser --> B4
 ```
 
 ## Tab 6: Booking Management (for Guide's Services)
@@ -106,7 +103,7 @@ graph TD
         BK3["Update Booking Status (Confirm/Decline)<br>(PUT /bookings/:id)"]
     end
 
-    GuideUser(["Guide"])
+    GuideUser([Guide])
 
     GuideUser --> BK1
     GuideUser --> BK2
@@ -126,7 +123,7 @@ graph TD
         PAY6["View Payment Details<br>(GET /payments/:id)"]
     end
 
-    GuideUser(["Guide"])
+    GuideUser([Guide])
 
     GuideUser --> PAY1
     GuideUser --> PAY2
@@ -146,7 +143,7 @@ graph TD
         INFO3["View Tariffs for Program (GET /tariffs/program/:programId)"]
     end
 
-    GuideUser(["Guide"])
+    GuideUser([Guide])
 
     GuideUser --> INFO1
     GuideUser --> INFO2
