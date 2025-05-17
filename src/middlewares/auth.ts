@@ -145,16 +145,37 @@ export const requireTourist = (
 };
 
 // Middleware to require guide role
-export const requireGuide = (
+export const requireGuide = async (
   req: Request,
   _: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   if (!req.user || req.user.role !== UserRole.GUIDE) {
     next(new ForbiddenError('Guide access required'));
     return;
   }
-  next();
+  
+  // Check if the guide is approved
+  try {
+    const guide = await prisma.guide.findFirst({
+      where: {
+        baseUser: {
+          id: req.user.id
+        }
+      }
+    });
+    
+    if (!guide || !guide.isApproved) {
+      next(new ForbiddenError('Your guide profile is pending approval by an admin'));
+      return;
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Error checking guide approval status:', error);
+    next(new ForbiddenError('Failed to verify guide approval status'));
+    return;
+  }
 };
 
 // Middleware to require admin role

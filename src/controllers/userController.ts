@@ -2,10 +2,12 @@ import { Request, Response } from 'express';
 import * as userService from '../services/userService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ValidationError } from '../utils/errors';
+import { filePathToUrl } from '../middlewares/uploadMiddleware';
 import {
   IdParams,
   UpdateUserRequest,
-  UpdateGuideRequest
+  UpdateGuideRequest,
+  ManageGuideImagesRequest
 } from '../types';
 
 // Helper function to get guide ID from user ID
@@ -152,5 +154,120 @@ export const getGuidePrograms = catchAsync(async (req: Request, res: Response) =
   res.status(200).json({
     status: 'success',
     data: programs
+  });
+});
+
+// Add image to guide profile
+export const addGuideImage = catchAsync(async (req: ManageGuideImagesRequest, res: Response) => {
+  if (!req.user || !req.user.isGuide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  
+  // Check if file was uploaded
+  if (!req.file) {
+    throw new BadRequestError('No image file provided');
+  }
+  
+  // Convert file path to URL
+  const imageUrl = filePathToUrl(req.file.path);
+  
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
+  
+  // Add image to guide profile
+  const updatedGuide = await userService.addGuideImage(guideId, imageUrl);
+  
+  res.status(200).json({
+    status: 'success',
+    data: updatedGuide
+  });
+});
+
+// Remove image from guide profile
+export const removeGuideImage = catchAsync(async (req: ManageGuideImagesRequest, res: Response) => {
+  if (!req.user || !req.user.isGuide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  
+  // Get the image index from the request params
+  const imageIndex = parseInt(req.params.imageIndex || '0');
+  
+  if (isNaN(imageIndex)) {
+    throw new BadRequestError('Invalid image index');
+  }
+  
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
+  
+  // Remove image from guide profile
+  const updatedGuide = await userService.removeGuideImage(guideId, imageIndex);
+  
+  res.status(200).json({
+    status: 'success',
+    data: updatedGuide
+  });
+});
+
+// Update order of guide images
+export const updateGuideImagesOrder = catchAsync(async (req: ManageGuideImagesRequest, res: Response) => {
+  if (!req.user || !req.user.isGuide) {
+    throw new BadRequestError('User is not a guide');
+  }
+  
+  // Get new image order from request body
+  const { images } = req.body;
+  
+  if (!images || !Array.isArray(images)) {
+    throw new BadRequestError('Images must be an array of image URLs');
+  }
+  
+  // Get guide ID from user ID
+  const guideId = await getGuideIdFromUser(req.user.id);
+  
+  // Update guide images order
+  const updatedGuide = await userService.updateGuideImagesOrder(guideId, images);
+  
+  res.status(200).json({
+    status: 'success',
+    data: updatedGuide
+  });
+});
+
+// Get all pending guide approval requests (admin only)
+export const getPendingGuideApprovals = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user || !req.user.isAdmin) {
+    throw new BadRequestError('Only admins can access this resource');
+  }
+  
+  const pendingGuides = await userService.getPendingGuideApprovals();
+  
+  res.status(200).json({
+    status: 'success',
+    data: pendingGuides
+  });
+});
+
+// Approve or reject a guide (admin only)
+export const updateGuideApprovalStatus = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user || !req.user.isAdmin) {
+    throw new BadRequestError('Only admins can approve guides');
+  }
+  
+  const guideId = parseInt(req.params.id);
+  const { isApproved } = req.body;
+  
+  if (isNaN(guideId)) {
+    throw new BadRequestError('Invalid guide ID');
+  }
+  
+  if (typeof isApproved !== 'boolean') {
+    throw new BadRequestError('isApproved must be a boolean value');
+  }
+  
+  const guide = await userService.updateGuideApprovalStatus(guideId, isApproved);
+  
+  res.status(200).json({
+    status: 'success',
+    data: guide
   });
 }); 

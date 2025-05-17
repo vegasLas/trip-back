@@ -1,5 +1,6 @@
 import { BaseUser, Guide, Tourist, Admin, AdminPermission } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
+import * as Express from 'express';
 import { AuthUser, ControllerFunction, IdParams, ApiResponse } from './common';
 
 // Request Types
@@ -34,7 +35,7 @@ export interface UpdateGuideRequest extends Request {
     specialties?: string[];
     phoneNumber?: string;
     email?: string;
-    avatarUrl?: string;
+    images?: string[];
     isActive?: boolean;
   };
   params: {
@@ -93,7 +94,6 @@ export interface GuideData {
   specialties?: string[];
   phoneNumber?: string;
   email?: string;
-  avatarUrl?: string;
   isActive?: boolean;
 }
 
@@ -113,4 +113,20 @@ export type GetGuidesController = ControllerFunction;
 export type GetTouristsController = ControllerFunction;
 export type GetAdminsController = ControllerFunction;
 export type CreateAdminController = (req: CreateAdminRequest, res: Response, next: NextFunction) => Promise<void> | void;
-export type UpdateAdminController = (req: UpdateAdminRequest, res: Response, next: NextFunction) => Promise<void> | void; 
+export type UpdateAdminController = (req: UpdateAdminRequest, res: Response, next: NextFunction) => Promise<void> | void;
+
+export interface ManageGuideImagesRequest extends Request {
+  body: {
+    images?: string[];
+  };
+  params: {
+    id?: string;
+    imageIndex?: string; // For removing a specific image
+  };
+  user: AuthUser;
+  file?: any; // Simplified file type
+  files?: any[]; // Simplified files type
+}
+
+export type AddGuideImageController = (req: ManageGuideImagesRequest, res: Response, next: NextFunction) => Promise<void> | void;
+export type RemoveGuideImageController = (req: ManageGuideImagesRequest, res: Response, next: NextFunction) => Promise<void> | void; 
