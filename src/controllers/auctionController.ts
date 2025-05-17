@@ -7,7 +7,8 @@ import {
   IdParams,
   CreateAuctionRequest,
   UpdateAuctionRequest,
-  PlaceBidRequest
+  PlaceBidRequest,
+  ProgramAuctionParams
 } from '../types';
 
 // Helper function to get guide ID from user ID
@@ -52,6 +53,23 @@ export const getAuctionById = catchAsync(async (req: IdParams, res: Response) =>
   res.status(200).json({
     status: 'success',
     data: auction
+  });
+});
+
+// Get auctions for a specific program
+export const getProgramAuctions = catchAsync(async (req: ProgramAuctionParams, res: Response) => {
+  const programId = parseInt(req.params.programId);
+  
+  if (isNaN(programId)) {
+    throw new BadRequestError('Invalid program ID');
+  }
+  
+  const auctions = await auctionService.getProgramAuctions(programId);
+  
+  res.status(200).json({
+    status: 'success',
+    results: auctions.length,
+    data: auctions
   });
 });
 
@@ -162,7 +180,7 @@ export const placeBid = catchAsync(async (req: PlaceBidRequest, res: Response) =
 });
 
 // Get auctions a guide has bid on
-export const getTouristBiddedAuctions = catchAsync(async (req: Request, res: Response) => {
+export const getGuideBiddedAuctions = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -170,7 +188,7 @@ export const getTouristBiddedAuctions = catchAsync(async (req: Request, res: Res
   // Get guide ID from user ID
   const guideId = await getGuideIdFromUser(req.user.id);
   
-  const auctions = await auctionService.getTouristBiddedAuctions(guideId);
+  const auctions = await auctionService.getGuideBiddedAuctions(guideId);
   
   res.status(200).json({
     status: 'success',
@@ -180,7 +198,7 @@ export const getTouristBiddedAuctions = catchAsync(async (req: Request, res: Res
 });
 
 // Get tourist's own auctions
-export const getGuideAuctions = catchAsync(async (req: Request, res: Response) => {
+export const getTouristAuctions = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isTourist) {
     throw new ForbiddenError('Unauthorized access');
   }
@@ -188,7 +206,7 @@ export const getGuideAuctions = catchAsync(async (req: Request, res: Response) =
   // Get tourist ID from user ID
   const touristId = await getTouristIdFromUser(req.user.id);
   
-  const auctions = await auctionService.getGuideAuctions(touristId);
+  const auctions = await auctionService.getTouristAuctions(touristId);
   
   res.status(200).json({
     status: 'success',

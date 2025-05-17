@@ -12,6 +12,7 @@ export interface CreateAuctionRequest extends Request {
     numberOfPeople: number;
     budget?: number;
     expiresAt: Date | string;
+    programId?: number; // Program ID if auction is for a specific program
   };
   user: AuthUser;
 }
@@ -26,6 +27,7 @@ export interface UpdateAuctionRequest extends Request {
     budget?: number;
     expiresAt?: Date | string;
     status?: AuctionStatus;
+    programId?: number; // Program ID if auction is for a specific program
   };
   params: {
     id: string;
@@ -51,6 +53,13 @@ export interface AuctionParams extends Request {
   user: AuthUser;
 }
 
+export interface ProgramAuctionParams extends Request {
+  params: {
+    programId: string;
+  };
+  user: AuthUser;
+}
+
 // Service Types
 export interface AuctionData {
   title: string;
@@ -60,6 +69,7 @@ export interface AuctionData {
   numberOfPeople: number;
   budget?: number;
   expiresAt: Date | string;
+  programId?: number; // Program ID if auction is for a specific program
 }
 
 export interface BidData {
@@ -80,4 +90,6 @@ export type DeleteAuctionController = (req: IdParams, res: Response, next: NextF
 export type EndAuctionController = (req: IdParams, res: Response, next: NextFunction) => Promise<void> | void;
 export type PlaceBidController = (req: PlaceBidRequest, res: Response, next: NextFunction) => Promise<void> | void;
 export type GetTouristBiddedAuctionsController = ControllerFunction;
-export type GetGuideAuctionsController = ControllerFunction; 
+export type GetTouristAuctionsController = ControllerFunction;
+export type GetGuideBiddedAuctionsController = ControllerFunction;
+export type GetProgramAuctionsController = (req: ProgramAuctionParams, res: Response, next: NextFunction) => Promise<void> | void; 

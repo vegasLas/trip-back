@@ -75,8 +75,17 @@ export const createBid = async (guideId: number, bidData: any) => {
     throw new NotFoundError('Active auction not found');
   }
   
-  // Check if the guide is allowed to bid on their own auction
-  // This logic may need adjustment based on your business rules
+  // Check if guide already has a bid on this auction
+  const existingBid = await prisma.bid.findFirst({
+    where: {
+      auctionId: parseInt(auctionId),
+      guideId
+    }
+  });
+  
+  if (existingBid) {
+    throw new BadRequestError('You already have a bid on this auction. Please update your existing bid.');
+  }
   
   // Create the bid
   const bid = await prisma.bid.create({

@@ -7,6 +7,7 @@ const router = Router();
 // Public routes - anyone can view public auctions
 router.get('/active', auctionController.getActiveAuctions);
 router.get('/:id', auctionController.getAuctionById);
+router.get('/program/:programId', auctionController.getProgramAuctions);
 
 // Protected routes - authentication required
 router.use(validateTelegramAuth);
@@ -16,10 +17,10 @@ router.post('/', requireTourist, auctionController.createAuction);
 router.put('/:id', requireTourist, auctionController.updateAuction);
 router.delete('/:id', requireTourist, auctionController.deleteAuction);
 router.post('/:id/end', requireTourist, auctionController.endAuction);
-router.get('/tourist/auctions', requireTourist, auctionController.getGuideAuctions);
+router.get('/tourist/auctions', requireTourist, auctionController.getTouristAuctions);
 
 // Guide routes - guides place bids on auctions
 router.post('/:id/bids', requireGuide, auctionController.placeBid);
-router.get('/guide/bidded', requireGuide, auctionController.getTouristBiddedAuctions);
+router.get('/guide/bidded', requireGuide, auctionController.getGuideBiddedAuctions);
 
 export default router; 
