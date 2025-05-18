@@ -25,4 +25,8 @@ router.patch('/recommendations/:recommendationId', adminController.updateRecomme
 router.get('/guides/pending', userController.getPendingGuideApprovals);
 router.patch('/guides/:id/approval', userController.updateGuideApprovalStatus);
 
+// Guide profile change request routes
+router.get('/guides/change-requests', userController.getPendingGuideProfileChangeRequests);
+router.patch('/guides/change-requests/:id', userController.processGuideProfileChangeRequest);
+
 export default router; 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as programDayController from '../controllers/programDayController';
 import programPointRoutes from './programPointRoutes';
-import { validateTelegramAuth, requireGuide, requireAdmin } from '../middlewares/auth';
+import { validateTelegramAuth, requireAdmin } from '../middlewares/auth';
 
 const router = Router({ mergeParams: true });
 

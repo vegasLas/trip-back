@@ -62,6 +62,7 @@ export const uploadGuideImage = multer({
   },
   fileFilter
 }).single('image');
+
 export const uploadGuideImages = multer({
   storage: guideImageStorage,
   limits: {
@@ -69,18 +70,19 @@ export const uploadGuideImages = multer({
   },
   fileFilter
 }).fields([
-  { name: 'images',    maxCount: 10 },
-  { name: 'images[0]', maxCount: 1 },
-  { name: 'images[1]', maxCount: 1 },
-  { name: 'images[2]', maxCount: 1 },
-  { name: 'images[3]', maxCount: 1 },
-  { name: 'images[4]', maxCount: 1 },
-  { name: 'images[5]', maxCount: 1 },
-  { name: 'images[6]', maxCount: 1 },
-  { name: 'images[7]', maxCount: 1 },
-  { name: 'images[8]', maxCount: 1 },
-  { name: 'images[9]', maxCount: 1 }
-]); 
+  { name: 'newImages', maxCount: 10 },
+  { name: 'newImages[0]', maxCount: 1 },
+  { name: 'newImages[1]', maxCount: 1 },
+  { name: 'newImages[2]', maxCount: 1 },
+  { name: 'newImages[3]', maxCount: 1 },
+  { name: 'newImages[4]', maxCount: 1 },
+  { name: 'newImages[5]', maxCount: 1 },
+  { name: 'newImages[6]', maxCount: 1 },
+  { name: 'newImages[7]', maxCount: 1 },
+  { name: 'newImages[8]', maxCount: 1 },
+  { name: 'newImages[9]', maxCount: 1 }
+]);
+
 export const uploadProgramImages = multer({
   storage: programImageStorage,
   limits: {

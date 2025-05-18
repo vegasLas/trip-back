@@ -1,6 +1,5 @@
 import { BaseUser, Guide, Tourist, Admin, AdminPermission } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
-import * as Express from 'express';
 import { AuthUser, ControllerFunction, IdParams, ApiResponse } from './common';
 
 // Request Types
@@ -31,8 +30,6 @@ export interface UpdateUserRequest extends Request {
 export interface UpdateGuideRequest extends Request {
   body: {
     bio?: string;
-    languages?: string[];
-    specialties?: string[];
     phoneNumber?: string;
     email?: string;
     images?: string[];
@@ -90,8 +87,6 @@ export interface UserData {
 
 export interface GuideData {
   bio?: string;
-  languages?: string[];
-  specialties?: string[];
   phoneNumber?: string;
   email?: string;
   isActive?: boolean;
@@ -128,5 +123,4 @@ export interface ManageGuideImagesRequest extends Request {
   files?: any[]; // Simplified files type
 }
 
-export type AddGuideImageController = (req: ManageGuideImagesRequest, res: Response, next: NextFunction) => Promise<void> | void;
 export type RemoveGuideImageController = (req: ManageGuideImagesRequest, res: Response, next: NextFunction) => Promise<void> | void; 
