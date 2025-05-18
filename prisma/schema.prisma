@@ -72,8 +72,6 @@ model Guide {
   baseUser      BaseUser  @relation(fields: [baseUserId], references: [id])
   baseUserId    Int       @unique
   bio           String?
-  languages     String[]  // Languages spoken
-  specialties   String[]  // Guide specialties
   phoneNumber   String?
   email         String?
   images        String[]  @default([]) // Multiple images for the guide profile
@@ -89,6 +87,7 @@ model Guide {
   recommendations ProgramRecommendation[] // Program recommendations made by the guide
   payments      Payment[] // Payments associated with this guide
   tokenTransactions TokenTransaction[] // Token transactions for this guide
+  changeRequests GuideProfileChangeRequest[] // Profile change requests
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -389,4 +388,28 @@ enum TransactionStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+// GuideProfileChangeRequest model for tracking profile changes that need approval
+model GuideProfileChangeRequest {
+  id            Int            @id @default(autoincrement())
+  guideId       Int
+  guide         Guide          @relation(fields: [guideId], references: [id])
+  changeType    ChangeType
+  bio           String?        // New bio if bio is being changed
+  phoneNumber   String?        // New phone number if being changed
+  email         String?        // New email if being changed
+  images     String[]       // New images to be added
+  status        ApprovalStatus @default(PENDING)
+  adminComment  String?        // Admin's response comment
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// Add new enum for change types
+enum ChangeType {
+  BIO_UPDATE
+  CONTACT_INFO_UPDATE
+  ADD_IMAGES
+  MULTIPLE_CHANGES
 }

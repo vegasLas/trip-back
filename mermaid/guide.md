@@ -61,7 +61,7 @@ sequenceDiagram
     API->>DB: SELECT BaseUser WHERE id = guideId
     DB-->>API: UserProfile
     API-->>Guide: 200 OK UserProfile
-    Guide->>API: POST /users/register-guide { bio, languages, specialties }
+    Guide->>API: POST /users/register-guide { bio }
     API->>DB: Update BaseUser role to GUIDE and insert Guide record
     DB-->>API: GuideProfile
     API-->>Guide: 201 Created GuideProfile

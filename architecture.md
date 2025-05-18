@@ -94,8 +94,6 @@ This document outlines the implementation plan for a Telegram Mini App that allo
      baseUser      BaseUser  @relation(fields: [baseUserId], references: [id])
      baseUserId    Int       @unique
      bio           String?
-     languages     String[]  // Languages spoken
-     specialties   String[]  // Guide specialties
      phoneNumber   String?
      email         String?
      rating        Float?    // Average rating

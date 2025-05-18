@@ -1,24 +1,24 @@
 import { Request, Response } from 'express';
 import * as userService from '../services/userService';
+import * as guideService from '../services/guideService';
 import { catchAsync } from '../utils/catchAsync';
 import { BadRequestError, ValidationError } from '../utils/errors';
 import { filePathToUrl } from '../middlewares/uploadMiddleware';
 import {
   IdParams,
   UpdateUserRequest,
-  UpdateGuideRequest,
-  ManageGuideImagesRequest
+  UpdateGuideRequest
 } from '../types';
 
 // Helper function to get guide ID from user ID
 const getGuideIdFromUser = async (userId: number): Promise<number> => {
-  const user = await userService.getUserProfile(userId);
-  if (!user.guide) {
+  try {
+    const guide = await guideService.getGuideByUserId(userId);
+    return guide.id;
+  } catch (error) {
     throw new BadRequestError('User is not a guide');
   }
-  return user.guide.id;
 };
-
 
 // Get current user profile
 export const getCurrentUser = catchAsync(async (req: Request, res: Response) => {
@@ -71,15 +71,12 @@ export const registerAsGuide = catchAsync(async (req: UpdateGuideRequest, res: R
   }
   
   // Validate required fields
-  const { languages, specialties } = req.body;
+  const { bio } = req.body;
   const errors: Record<string, string> = {};
   
-  if (!languages || !Array.isArray(languages) || languages.length === 0) {
-    errors.languages = 'At least one language is required';
-  }
   
-  if (!specialties || !Array.isArray(specialties) || specialties.length === 0) {
-    errors.specialties = 'At least one specialty is required';
+  if (!bio) {
+    errors.bio = 'Bio is required';
   }
   
   if (Object.keys(errors).length > 0) {
@@ -149,7 +146,7 @@ export const getGuidePrograms = catchAsync(async (req: Request, res: Response) =
   // Get guide ID from user ID
   const guideId = await getGuideIdFromUser(req.user.id);
   
-  const programs = await userService.getGuidePrograms(guideId);
+  const programs = await guideService.getGuidePrograms(guideId);
   
   res.status(200).json({
     status: 'success',
@@ -157,79 +154,62 @@ export const getGuidePrograms = catchAsync(async (req: Request, res: Response) =
   });
 });
 
-// Add image to guide profile
-export const addGuideImage = catchAsync(async (req: ManageGuideImagesRequest, res: Response) => {
+// Consolidated endpoint to update all guide profile information
+export const updateGuideProfile = catchAsync(async (req: Request, res: Response) => {
   if (!req.user || !req.user.isGuide) {
     throw new BadRequestError('User is not a guide');
-  }
-  
-  // Check if file was uploaded
-  if (!req.file) {
-    throw new BadRequestError('No image file provided');
-  }
-  
-  // Convert file path to URL
-  const imageUrl = filePathToUrl(req.file.path);
-  
-  // Get guide ID from user ID
-  const guideId = await getGuideIdFromUser(req.user.id);
-  
-  // Add image to guide profile
-  const updatedGuide = await userService.addGuideImage(guideId, imageUrl);
-  
-  res.status(200).json({
-    status: 'success',
-    data: updatedGuide
-  });
-});
-
-// Remove image from guide profile
-export const removeGuideImage = catchAsync(async (req: ManageGuideImagesRequest, res: Response) => {
-  if (!req.user || !req.user.isGuide) {
-    throw new BadRequestError('User is not a guide');
-  }
-  
-  // Get the image index from the request params
-  const imageIndex = parseInt(req.params.imageIndex || '0');
-  
-  if (isNaN(imageIndex)) {
-    throw new BadRequestError('Invalid image index');
   }
   
   // Get guide ID from user ID
   const guideId = await getGuideIdFromUser(req.user.id);
   
-  // Remove image from guide profile
-  const updatedGuide = await userService.removeGuideImage(guideId, imageIndex);
+  // Extract update data from request body
+  const { 
+    bio, 
+    specialties, 
+    phoneNumber, 
+    email, 
+    isActive, 
+    programIds,
+    firstName,
+    lastName,
+    username,
+    existingImages
+  } = req.body;
+  
+  // Handle file uploads (newImages)
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  let newImages: string[] = [];
+  
+  // Check if we have uploaded files
+  if (files && files.newImages) {
+    // Convert file paths to URLs
+    newImages = files.newImages.map(file => filePathToUrl(file.path));
+  }
+  
+  // Call consolidated service function
+  const result = await guideService.updateGuide(
+    guideId, 
+    req.user.id, 
+    {
+      bio,
+      phoneNumber,
+      email,
+      isActive,
+      programIds,
+      firstName,
+      lastName,
+      username,
+      newImages,
+      existingImages: existingImages ? JSON.parse(existingImages) : undefined
+    }
+  );
   
   res.status(200).json({
     status: 'success',
-    data: updatedGuide
-  });
-});
-
-// Update order of guide images
-export const updateGuideImagesOrder = catchAsync(async (req: ManageGuideImagesRequest, res: Response) => {
-  if (!req.user || !req.user.isGuide) {
-    throw new BadRequestError('User is not a guide');
-  }
-  
-  // Get new image order from request body
-  const { images } = req.body;
-  
-  if (!images || !Array.isArray(images)) {
-    throw new BadRequestError('Images must be an array of image URLs');
-  }
-  
-  // Get guide ID from user ID
-  const guideId = await getGuideIdFromUser(req.user.id);
-  
-  // Update guide images order
-  const updatedGuide = await userService.updateGuideImagesOrder(guideId, images);
-  
-  res.status(200).json({
-    status: 'success',
-    data: updatedGuide
+    data: result.guide,
+    pendingChanges: result.pendingChanges,
+    message: result.pendingChangeMessage || 'Guide profile updated successfully'
   });
 });
 
@@ -239,7 +219,7 @@ export const getPendingGuideApprovals = catchAsync(async (req: Request, res: Res
     throw new BadRequestError('Only admins can access this resource');
   }
   
-  const pendingGuides = await userService.getPendingGuideApprovals();
+  const pendingGuides = await guideService.getPendingGuideApprovals();
   
   res.status(200).json({
     status: 'success',
@@ -264,10 +244,49 @@ export const updateGuideApprovalStatus = catchAsync(async (req: Request, res: Re
     throw new BadRequestError('isApproved must be a boolean value');
   }
   
-  const guide = await userService.updateGuideApprovalStatus(guideId, isApproved);
+  const guide = await guideService.updateGuideApprovalStatus(guideId, isApproved);
   
   res.status(200).json({
     status: 'success',
     data: guide
+  });
+});
+
+// Get all pending guide profile change requests (admin only)
+export const getPendingGuideProfileChangeRequests = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user || !req.user.isAdmin) {
+    throw new BadRequestError('Only admins can access this resource');
+  }
+  
+  const requests = await guideService.getPendingGuideProfileChangeRequests();
+  
+  res.status(200).json({
+    status: 'success',
+    data: requests
+  });
+});
+
+// Process a guide profile change request (admin only)
+export const processGuideProfileChangeRequest = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user || !req.user.isAdmin) {
+    throw new BadRequestError('Only admins can process change requests');
+  }
+  
+  const requestId = parseInt(req.params.id);
+  const { approve, adminComment } = req.body;
+  
+  if (isNaN(requestId)) {
+    throw new BadRequestError('Invalid request ID');
+  }
+  
+  if (typeof approve !== 'boolean') {
+    throw new BadRequestError('approve must be a boolean value');
+  }
+  
+  const result = await guideService.processGuideProfileChangeRequest(requestId, approve, adminComment);
+  
+  res.status(200).json({
+    status: 'success',
+    data: result
   });
 }); 
